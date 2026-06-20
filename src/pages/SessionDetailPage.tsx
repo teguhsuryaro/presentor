@@ -23,7 +23,7 @@ export function SessionDetailPage() {
 
   const [session, setSession] = useState<SessionWithStats | null>(null)
   const [participants, setParticipants] = useState<ParticipantWithAttendance[]>([])
-  
+  const [isLoading, setIsLoading] = useState(true)
   
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'semua' | 'hadir' | 'belum'>('semua')
@@ -46,7 +46,7 @@ export function SessionDetailPage() {
 
   useEffect(() => {
     if (!id) return
-    
+    fetchData()
   }, [id])
 
   useRealtimeAttendance({
@@ -58,7 +58,7 @@ export function SessionDetailPage() {
       setTimeout(() => setHighlightedRowId(null), 800)
       
       // Update stats quietly
-      fetchSessionInfo()
+      fetchDataQuietly()
     },
     onDelete: (old) => {
       setParticipants(prev => prev.map(p => p.id === old.participant_id ? { ...p, attendance: null } : p))
@@ -66,14 +66,41 @@ export function SessionDetailPage() {
       setHighlightedRowId(old.participant_id)
       setTimeout(() => setHighlightedRowId(null), 800)
       
-      fetchSessionInfo()
+      fetchDataQuietly()
     },
     onSessionUpdate: (newSession) => {
       setSession(prev => prev ? { ...prev, ...newSession } : prev)
     }
   })
 
-  const fetchSessionInfo = async () => {
+  const fetchData = async () => {
+    if (!id) return
+    setIsLoading(true)
+    try {
+      const [sessionData, participantsData] = await Promise.all([
+        getSessionById(id),
+        getParticipantsWithAttendance(id)
+      ])
+      setSession(sessionData)
+      setParticipants(participantsData)
+    } catch (error: any) {
+      addToast({ type: 'error', title: 'Gagal', message: error.message })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchDataQuietly = async () => {
+    if (!id) return
+    try {
+      const sessionData = await getSessionById(id)
+      setSession(sessionData)
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  const handleToggleAttendance = async (p: ParticipantWithAttendance) => {
     if (!id || !user) return
 
     const isAttending = !p.attendance
@@ -83,7 +110,6 @@ export function SessionDetailPage() {
       markAttendance(id, p.id, 'manual_checklist', user.id)
         .then(() => {
           addToast({ type: 'success', title: 'Berhasil', message: `${p.full_name} ditandai hadir.` })
-          // optimistic update handled by realtime
         })
         .catch(err => addToast({ type: 'error', title: 'Gagal', message: err.message }))
     } else {
@@ -353,34 +379,34 @@ export function SessionDetailPage() {
               {filteredParticipants.length > 0 ? (
                 filteredParticipants.map(participant => (
                   <tr 
-                    key={p.id} 
+                    key={participant.id} 
                     className={`hover:bg-[var(--color-surface-hover)] transition-colors ${
-                      highlightedRowId === p.id ? 'realtime-highlight' : ''
-                    } ${p.attendance ? 'bg-green-50/10 dark:bg-green-900/5' : ''}`}
+                      highlightedRowId === participant.id ? 'realtime-highlight' : ''
+                    } ${participant.attendance ? 'bg-green-50/10 dark:bg-green-900/5' : ''}`}
                   >
                     <td className="px-4 py-3 text-center">
                       <input 
                         type="checkbox" 
-                        checked={!!p.attendance}
-                        onChange={() => (() => {})(participant)}
+                        checked={!!participant.attendance}
+                        onChange={() => handleToggleAttendance(participant)}
                         className="w-4 h-4 rounded-[var(--radius-sm)] border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)] cursor-pointer"
                       />
                     </td>
                     <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">
-                      {p.full_name}
+                      {participant.full_name}
                     </td>
                     <td className="px-4 py-3 font-[var(--font-mono)] text-[var(--color-text-secondary)]">
-                      {p.nim}
+                      {participant.nim}
                     </td>
                     <td className="px-4 py-3">
-                      {p.attendance ? (
+                      {participant.attendance ? (
                         <Badge variant="success" className="bg-green-100 text-green-700 border-green-200">Hadir</Badge>
                       ) : (
                         <Badge variant="default">-</Badge>
                       )}
                     </td>
                     <td className="px-4 py-3 text-[var(--color-text-secondary)]">
-                      {p.attendance ? new Date(p.attendance.attended_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                      {participant.attendance ? new Date(participant.attendance.attended_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <DropdownMenu
