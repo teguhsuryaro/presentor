@@ -31,7 +31,7 @@ export async function getDashboardStatistics(): Promise<DashboardStats> {
   // Aggregate stats from sessions table
   const { data: sessions, error } = await supabase
     .from('sessions')
-    .select('stats, status')
+    .select('status, stats:session_stats_snapshot(total_participants, total_attended)')
     
   if (error) throw error
 
@@ -39,9 +39,9 @@ export async function getDashboardStatistics(): Promise<DashboardStats> {
   let totalAttended = 0
 
   sessions.forEach(s => {
-    if (s.stats) {
-      totalParticipants += (s.stats as any).total_participants || 0
-      totalAttended += (s.stats as any).total_attended || 0
+    if (s.stats && (s.stats as any).length > 0) {
+      totalParticipants += (s.stats as any)[0].total_participants || 0
+      totalAttended += (s.stats as any)[0].total_attended || 0
     }
   })
 
@@ -56,14 +56,15 @@ export async function getDashboardStatistics(): Promise<DashboardStats> {
 export async function getAttendanceBySession(): Promise<SessionAttendanceData[]> {
   const { data: sessions, error } = await supabase
     .from('sessions')
-    .select('name, stats, created_at')
+    .select('name, created_at, stats:session_stats_snapshot(total_participants, total_attended)')
     .order('created_at', { ascending: true })
 
   if (error) throw error
 
   return sessions.map(s => {
-    const total = (s.stats as any)?.total_participants || 0
-    const hadir = (s.stats as any)?.total_attended || 0
+    const statsObj = s.stats && (s.stats as any).length > 0 ? (s.stats as any)[0] : null
+    const total = statsObj?.total_participants || 0
+    const hadir = statsObj?.total_attended || 0
     const belumHadir = total - hadir
     const persentase = total > 0 ? (hadir / total) * 100 : 0
 
@@ -80,14 +81,15 @@ export async function getAttendanceBySession(): Promise<SessionAttendanceData[]>
 export async function getAttendanceTrend(): Promise<TrendData[]> {
   const { data: sessions, error } = await supabase
     .from('sessions')
-    .select('name, created_at, stats')
+    .select('name, created_at, stats:session_stats_snapshot(total_participants, total_attended)')
     .order('created_at', { ascending: true })
 
   if (error) throw error
 
   return sessions.map(s => {
-    const total = (s.stats as any)?.total_participants || 0
-    const hadir = (s.stats as any)?.total_attended || 0
+    const statsObj = s.stats && (s.stats as any).length > 0 ? (s.stats as any)[0] : null
+    const total = statsObj?.total_participants || 0
+    const hadir = statsObj?.total_attended || 0
     const persentase = total > 0 ? (hadir / total) * 100 : 0
 
     return {

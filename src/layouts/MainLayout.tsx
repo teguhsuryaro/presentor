@@ -11,8 +11,6 @@ const user = { role: 'super_admin', full_name: 'Super Administrator' }
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
-  { path: '/sessions', label: 'Sesi Presensi', icon: CalendarDays },
-  { path: '/participants', label: 'Peserta', icon: Users },
   { path: '/stats', label: 'Statistik', icon: BarChart3 },
   { path: '/history', label: 'Riwayat Aktivitas', icon: History },
   { path: '/trash', label: 'Sampah', icon: Trash2 },
@@ -20,8 +18,6 @@ const navItems = [
 
 const bottomNavItems = [
   { path: '/', label: 'Home', icon: Home },
-  { path: '/sessions', label: 'Sesi', icon: CalendarDays },
-  { path: '/participants', label: 'Peserta', icon: Users },
   { path: '/stats', label: 'Statistik', icon: BarChart3 },
   { path: '/profile', label: 'Profil', icon: Settings },
 ]
