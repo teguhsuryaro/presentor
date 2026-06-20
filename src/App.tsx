@@ -43,7 +43,6 @@ function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/sessions" element={<div>Sessions List</div>} />
                 <Route path="/sessions/:id" element={<SessionDetailPage />} />
-                <Route path="/participants" element={<ParticipantsPage />} />
                 <Route path="/stats" element={<StatisticsPage />} />
                 <Route path="/history" element={<AuditLogPage />} />
                 <Route path="/trash" element={<TrashPage />} />
