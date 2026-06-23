@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, Button, DropdownMenu, ScrollToTopButton } from '../components/ui'
+import { Card, Button, DropdownMenu } from '../components/ui'
 import { getAuditLogs, type AuditLogWithDetails, type AuditLogFilter } from '../services/auditLog.service'
 import { getSessions } from '../services/session.service'
 import { useToast } from '../context/ToastContext'
@@ -287,7 +287,6 @@ export function AuditLogPage() {
         )}
       </Card>
 
-      <ScrollToTopButton />
     </div>
   )
 }

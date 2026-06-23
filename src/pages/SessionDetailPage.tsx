@@ -10,7 +10,7 @@ import type { SessionWithStats, ParticipantWithAttendance } from '../types'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { cn } from '../lib/utils'
-import { Card, Button, Badge, Skeleton, AnimatedNumber, Input, ConfirmDialog, DropdownMenu, ScrollToTopButton } from '../components/ui'
+import { Card, Button, Badge, Skeleton, AnimatedNumber, Input, ConfirmDialog, DropdownMenu } from '../components/ui'
 import { AddParticipantModal } from '../components/participant/AddParticipantModal'
 import { EditParticipantModal } from '../components/participant/EditParticipantModal'
 import { ImportParticipantModal } from '../components/participant/ImportParticipantModal'
@@ -595,7 +595,6 @@ export function SessionDetailPage() {
         onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
 
-      <ScrollToTopButton />
     </div>
   )
 }

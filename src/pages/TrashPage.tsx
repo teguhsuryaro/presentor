@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, Button, Badge, ConfirmDialog, Input } from '../components/ui'
 import { getTrashedSessions, restoreSession, permanentlyDeleteSession, cleanupExpiredTrash } from '../services/trash.service'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { Trash2, RotateCcw, AlertTriangle, AlertCircle, RefreshCw } from 'lucide-react'

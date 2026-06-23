@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useAuth } from '../context/AuthContext'
-import { ConfirmDialog } from '../components/ui'
+import { ConfirmDialog, ScrollToTopButton } from '../components/ui'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
@@ -183,6 +183,7 @@ export function MainLayout() {
           <div className="max-w-6xl mx-auto h-full">
             <Outlet />
           </div>
+          <ScrollToTopButton />
         </div>
       </main>
 
