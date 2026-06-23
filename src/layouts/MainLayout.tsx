@@ -67,6 +67,21 @@ export function MainLayout() {
   const displayName = user?.full_name || 'User'
   const displayRole = user?.role?.replace('_', ' ') || 'user'
 
+  useEffect(() => {
+    const handleGlobalScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop
+      if (scrollY > 300) {
+        setShowScrollTop(true)
+      } else if (scrollY <= 300 && !scrollRef.current?.scrollTop) {
+        // Only hide if the internal scroll is also <= 300 or 0
+        setShowScrollTop(false)
+      }
+    }
+    
+    window.addEventListener('scroll', handleGlobalScroll)
+    return () => window.removeEventListener('scroll', handleGlobalScroll)
+  }, [])
+
   const handleScroll = () => {
     if (scrollRef.current) {
       setShowScrollTop(scrollRef.current.scrollTop > 300)
@@ -74,13 +89,14 @@ export function MainLayout() {
   }
 
   const scrollToTop = () => {
-    if (scrollRef.current) {
+    if (scrollRef.current && scrollRef.current.scrollTop > 0) {
       scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' })
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col lg:flex-row">
+    <div className="h-screen h-[100dvh] bg-[var(--color-bg)] flex flex-col lg:flex-row">
       
       {/* Mobile Header */}
       <header className="lg:hidden flex items-center justify-between p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-30">
