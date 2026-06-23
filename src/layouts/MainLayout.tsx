@@ -177,22 +177,9 @@ export function MainLayout() {
           <h2 className="text-xl font-bold font-[var(--font-display)] text-[var(--color-text-primary)]">
             {pageTitle}
           </h2>
-          <div className="flex items-center gap-4">
-            {/* Search Icon (decorative/future) */}
-            <button className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] rounded-full transition-colors">
-              <Search size={20} />
-            </button>
-            {/* User Info */}
-            <div className="flex items-center gap-3 pl-4 border-l border-[var(--color-border)]">
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">{displayName}</span>
-              <div className="w-9 h-9 rounded-full bg-[var(--color-accent)] text-white flex items-center justify-center font-bold font-[var(--font-display)] text-sm">
-                {displayName.charAt(0)}
-              </div>
-            </div>
-          </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-4 lg:p-8 bg-[var(--color-bg)]">
+        <div id="main-scroll-container" className="flex-1 overflow-auto p-4 lg:p-8 bg-[var(--color-bg)] relative">
           <div className="max-w-6xl mx-auto h-full">
             <Outlet />
           </div>

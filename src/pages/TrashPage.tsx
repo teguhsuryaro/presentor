@@ -18,21 +18,27 @@ export function TrashPage() {
   const [deleteDialog, setDeleteDialog] = useState<{isOpen: boolean, session: Session | null}>({ isOpen: false, session: null })
   const [deleteConfirmationName, setDeleteConfirmationName] = useState('')
 
-  useEffect(() => {
-    fetchTrashedSessions()
-  }, [])
-
-  async function fetchTrashedSessions() {
+  const fetchTrashedSessions = async () => {
     setIsLoading(true)
     try {
-      const data = await getTrashedSessions()
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false })
+
+      if (error) throw error
       setSessions(data)
-    } catch (e: any) {
-      addToast({ type: 'error', title: 'Gagal', message: 'Gagal memuat daftar sampah: ' + e.message })
+    } catch (error: any) {
+      addToast({ type: 'error', title: 'Gagal', message: 'Gagal mengambil data sampah: ' + error.message })
     } finally {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchTrashedSessions()
+  }, [])
 
   const handleCleanup = async () => {
     setIsCleaning(true)

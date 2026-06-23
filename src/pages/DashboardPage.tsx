@@ -174,7 +174,7 @@ export function DashboardPage() {
               ]}
               className="w-full sm:w-40"
             />
-            <Button onClick={() => setIsCreateOpen(true)} leftIcon={<Plus size={18} />}>
+            <Button onClick={() => setIsCreateOpen(true)} leftIcon={<Plus size={18} />} className="whitespace-nowrap w-full sm:w-auto shrink-0">
               Buat Sesi
             </Button>
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, Button, DropdownMenu } from '../components/ui'
+import { Card, Button, DropdownMenu, ScrollToTopButton } from '../components/ui'
 import { getAuditLogs, type AuditLogWithDetails, type AuditLogFilter } from '../services/auditLog.service'
 import { getSessions } from '../services/session.service'
 import { useToast } from '../context/ToastContext'
@@ -65,14 +65,6 @@ export function AuditLogPage() {
   
   const [sessions, setSessions] = useState<Session[]>([])
 
-  useEffect(() => {
-    fetchSessions()
-  }, [])
-
-  useEffect(() => {
-    fetchLogs()
-  }, [page, filterActions, filterSessionId])
-
   const fetchSessions = async () => {
     try {
       const data = await getSessions()
@@ -98,6 +90,14 @@ export function AuditLogPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchSessions()
+  }, [])
+
+  useEffect(() => {
+    fetchLogs()
+  }, [page, filterActions, filterSessionId])
 
   const toggleActionFilter = (action: AuditAction) => {
     setFilterActions(prev => 
@@ -286,6 +286,8 @@ export function AuditLogPage() {
           </div>
         )}
       </Card>
+
+      <ScrollToTopButton />
     </div>
   )
 }

@@ -11,7 +11,8 @@ export async function getSessions(filters?: SessionFilters): Promise<SessionWith
     .from('sessions')
     .select(`
       *,
-      stats:session_stats_snapshot(*),
+      participants(count),
+      attendance_records(count),
       event:events(*)
     `)
     .is('deleted_at', null)
@@ -31,12 +32,15 @@ export async function getSessions(filters?: SessionFilters): Promise<SessionWith
     throw new Error('Gagal mengambil daftar sesi')
   }
 
-  // Supabase returns one-to-many relationships as arrays, we need to extract the first item for stats
-  return (data as any[]).map(session => ({
-    ...session,
-    stats: session.stats && session.stats.length > 0 ? session.stats[0] : null,
-    event: session.event && session.event.length > 0 ? session.event[0] : session.event || null
-  })) as SessionWithStats[]
+  return (data as any[]).map(session => {
+    const total_participants = session.participants?.[0]?.count || 0
+    const total_attended = session.attendance_records?.[0]?.count || 0
+    return {
+      ...session,
+      stats: { total_participants, total_attended },
+      event: session.event && session.event.length > 0 ? session.event[0] : session.event || null
+    }
+  }) as SessionWithStats[]
 }
 
 export interface DashboardStats {
@@ -51,7 +55,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .from('sessions')
     .select(`
       id,
-      stats:session_stats_snapshot(total_participants, total_attended)
+      participants(count),
+      attendance_records(count)
     `)
     .is('deleted_at', null)
 
@@ -65,10 +70,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   let total_attended = 0
 
   data.forEach((session: any) => {
-    if (session.stats && session.stats.length > 0) {
-      total_participants += session.stats[0].total_participants || 0
-      total_attended += session.stats[0].total_attended || 0
-    }
+    total_participants += session.participants?.[0]?.count || 0
+    total_attended += session.attendance_records?.[0]?.count || 0
   })
 
   let attendance_percentage = 0
@@ -216,17 +219,20 @@ export async function getSessionById(id: string): Promise<SessionWithStats> {
     .from('sessions')
     .select(`
       *,
-      stats:session_stats_snapshot(*),
+      participants(count),
+      attendance_records(count),
       event:events(*)
     `)
     .eq('id', id)
     .single()
 
   if (error) throw new Error('Gagal mengambil detail sesi: ' + error.message)
-  
+  const total_participants = data.participants?.[0]?.count || 0
+  const total_attended = data.attendance_records?.[0]?.count || 0
+
   return {
     ...data,
-    stats: data.stats && data.stats.length > 0 ? data.stats[0] : null,
+    stats: { total_participants, total_attended },
     event: data.event && data.event.length > 0 ? data.event[0] : data.event || null
   } as SessionWithStats
 }

@@ -10,7 +10,7 @@ import type { SessionWithStats, ParticipantWithAttendance } from '../types'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { cn } from '../lib/utils'
-import { Card, Button, Badge, Skeleton, AnimatedNumber, Input, ConfirmDialog, DropdownMenu } from '../components/ui'
+import { Card, Button, Badge, Skeleton, AnimatedNumber, Input, ConfirmDialog, DropdownMenu, ScrollToTopButton } from '../components/ui'
 import { AddParticipantModal } from '../components/participant/AddParticipantModal'
 import { EditParticipantModal } from '../components/participant/EditParticipantModal'
 import { ImportParticipantModal } from '../components/participant/ImportParticipantModal'
@@ -48,6 +48,33 @@ export function SessionDetailPage() {
     isOpen: false, title: '', message: '', variant: 'default', action: async () => {}
   })
 
+  const fetchData = async () => {
+    if (!id) return
+    setIsLoading(true)
+    try {
+      const [sessionData, participantsData] = await Promise.all([
+        getSessionById(id),
+        getParticipantsWithAttendance(id)
+      ])
+      setSession(sessionData)
+      setParticipants(participantsData)
+    } catch (error: any) {
+      addToast({ type: 'error', title: 'Gagal', message: error.message })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchDataQuietly = async () => {
+    if (!id) return
+    try {
+      const sessionData = await getSessionById(id)
+      setSession(sessionData)
+    } catch (e) {
+      // ignore
+    }
+  }
+
   useEffect(() => {
     if (!id) return
     fetchData()
@@ -76,33 +103,6 @@ export function SessionDetailPage() {
       setSession(prev => prev ? { ...prev, ...newSession } : prev)
     }
   })
-
-  const fetchData = async () => {
-    if (!id) return
-    setIsLoading(true)
-    try {
-      const [sessionData, participantsData] = await Promise.all([
-        getSessionById(id),
-        getParticipantsWithAttendance(id)
-      ])
-      setSession(sessionData)
-      setParticipants(participantsData)
-    } catch (error: any) {
-      addToast({ type: 'error', title: 'Gagal', message: error.message })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchDataQuietly = async () => {
-    if (!id) return
-    try {
-      const sessionData = await getSessionById(id)
-      setSession(sessionData)
-    } catch (e) {
-      // ignore
-    }
-  }
 
   const handleToggleAttendance = async (p: ParticipantWithAttendance) => {
     if (!id || !user) return
@@ -594,6 +594,8 @@ export function SessionDetailPage() {
         }}
         onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
+
+      <ScrollToTopButton />
     </div>
   )
 }

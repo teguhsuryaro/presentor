@@ -43,7 +43,10 @@ export function DropdownMenu({ trigger, items, align = 'right' }: DropdownMenuPr
     // Jika menu keluar dari bawah viewport, tampilkan di atas trigger
     const estimatedMenuHeight = items.length * 40 + 8 // perkiraan tinggi menu
     if (top + estimatedMenuHeight > window.innerHeight - 8) {
-      top = rect.top - estimatedMenuHeight - 8
+      const topIfPushedUp = rect.top - estimatedMenuHeight - 8
+      if (topIfPushedUp > 8) {
+        top = topIfPushedUp
+      }
     }
 
     setPosition({ top, left })
@@ -107,10 +110,11 @@ export function DropdownMenu({ trigger, items, align = 'right' }: DropdownMenuPr
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -5 }}
               transition={{ duration: 0.1, ease: "easeOut" }}
-              className="fixed z-[9999] w-48 rounded-[var(--radius-md)] bg-[var(--color-surface)] shadow-[var(--shadow-card-hover)] border border-[var(--color-border)] py-1 focus:outline-none"
+              className="fixed z-[9999] w-48 rounded-[var(--radius-md)] bg-[var(--color-surface)] shadow-[var(--shadow-card-hover)] border border-[var(--color-border)] py-1 focus:outline-none overflow-y-auto"
               style={{
                 top: position.top,
                 left: position.left,
+                maxHeight: 'calc(100vh - 16px)'
               }}
             >
               <div className="flex flex-col">

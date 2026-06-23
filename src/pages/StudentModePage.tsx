@@ -40,6 +40,21 @@ export function StudentModePage() {
 
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  async function fetchSessionAndParticipants() {
+    if (!id) return
+    try {
+      const [sessionData, participantsData] = await Promise.all([
+        getSessionById(id),
+        getParticipantsWithAttendance(id)
+      ])
+      setSession(sessionData)
+      setAllParticipants(participantsData)
+    } catch (e: any) {
+      addToast({ type: 'error', title: 'Error', message: e.message })
+      navigate('/dashboard')
+    }
+  }
+
   useEffect(() => {
     if (!id) return
     fetchSessionAndParticipants()
@@ -60,21 +75,6 @@ export function StudentModePage() {
       }
     }
   })
-
-  async function fetchSessionAndParticipants() {
-    if (!id) return
-    try {
-      const [sessionData, participantsData] = await Promise.all([
-        getSessionById(id),
-        getParticipantsWithAttendance(id)
-      ])
-      setSession(sessionData)
-      setAllParticipants(participantsData)
-    } catch (e: any) {
-      addToast({ type: 'error', title: 'Error', message: e.message })
-      navigate('/dashboard')
-    }
-  }
 
   useEffect(() => {
     if (!selectedParticipant && !isSuccessMode) {
