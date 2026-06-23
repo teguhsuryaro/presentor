@@ -165,7 +165,7 @@ export function StudentModePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col relative overflow-hidden">
+    <div className="h-screen h-[100dvh] bg-[var(--color-bg)] flex flex-col relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-[var(--color-accent-soft)] to-transparent pointer-events-none opacity-50" />
       
@@ -177,8 +177,8 @@ export function StudentModePage() {
         <p className="text-sm text-[var(--color-text-secondary)]">Presensi Peserta</p>
       </header>
 
-      {/* Main Content Area — narrower */}
-      <main className="flex-1 w-full max-w-md mx-auto px-4 md:px-6 relative z-10 flex flex-col items-center">
+      {/* Main Content Area */}
+      <main className="flex-1 w-full max-w-md md:max-w-2xl mx-auto px-4 md:px-6 relative z-10 flex flex-col items-center justify-center pb-8">
         
         <AnimatePresence mode="wait">
           {!selectedParticipant && !isSuccessMode && (
