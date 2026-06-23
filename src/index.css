@@ -4,37 +4,43 @@
 /* Dilakukan di main.tsx karena Fontsource adalah npm package */
 
 @theme {
-  /* === Warna === */
-  --color-bg: #FAF7F2;
+  /* === Warna Baru (Tema Ungu/Indigo) === */
+  --color-bg: #EEF0F8;
   --color-surface: #FFFFFF;
-  --color-text-primary: #2B2521;
-  --color-text-secondary: #6B6258;
-  --color-border: #E5DED3;
-  --color-accent: #D9651A;
-  --color-accent-hover: #B8520F;
-  --color-accent-soft: #FBE6D6;
-  --color-success: #3F7D4F;
-  --color-danger: #A8392F;
-  --color-warning: #B8860B;
+  --color-surface-hover: #F5F6FA;
+  --color-text-primary: #2D3436;
+  --color-text-secondary: #636E72;
+  --color-border: #E0E3EB;
+  --color-accent: #6C5CE7;
+  --color-accent-hover: #5A4BD1;
+  --color-accent-soft: #F0EDFF;
+  --color-success: #00B894;
+  --color-success-soft: #E8FFF7;
+  --color-danger: #D63031;
+  --color-danger-soft: #FFEAEA;
+  --color-warning: #FDCB6E;
+  --color-warning-soft: #FFF9E6;
 
-  /* === Font Family === */
-  --font-display: 'Source Serif 4', 'Lora', Georgia, serif;
+  /* === Font Family (Outfit + Inter) === */
+  --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
 
-  /* === Border Radius === */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  /* === Border Radius (Lebih rounded) === */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
 
-  /* === Shadows === */
-  --shadow-card: 0 1px 3px rgba(43, 37, 33, 0.06), 0 1px 2px rgba(43, 37, 33, 0.04);
-  --shadow-card-hover: 0 4px 12px rgba(43, 37, 33, 0.08), 0 2px 4px rgba(43, 37, 33, 0.04);
+  /* === Shadows (Lebih soft, bernuansa ungu) === */
+  --shadow-card: 0 1px 4px rgba(108, 92, 231, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card-hover: 0 4px 16px rgba(108, 92, 231, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+  --shadow-sidebar: 2px 0 12px rgba(108, 92, 231, 0.04);
 
   /* === Transitions === */
   --transition-fast: 150ms ease;
-  --transition-normal: 200ms ease;
-  --transition-slow: 400ms ease;
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* === Base Styles === */
@@ -46,10 +52,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Heading menggunakan font serif display */
+/* Heading menggunakan font display modern */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 /* Monospace untuk NIM, timestamp */
@@ -81,8 +88,8 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+  background: #C8CCDA;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-secondary);
