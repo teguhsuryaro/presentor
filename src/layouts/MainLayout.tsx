@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { 
-  Home, BarChart3, History, Trash2, UserCog, Settings, LogOut, Menu, X, Search
+  Home, BarChart3, History, Trash2, UserCog, Settings, LogOut, Menu, X, Search, ArrowUp
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../lib/utils'
 import { useAuth } from '../context/AuthContext'
-import { ConfirmDialog, ScrollToTopButton } from '../components/ui'
+import { ConfirmDialog } from '../components/ui'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
@@ -37,6 +38,9 @@ export function MainLayout() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   
+  const [showScrollTop, setShowScrollTop] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  
   // Close sidebar on mobile when navigating
   useEffect(() => {
     setIsSidebarOpen(false)
@@ -62,6 +66,18 @@ export function MainLayout() {
 
   const displayName = user?.full_name || 'User'
   const displayRole = user?.role?.replace('_', ' ') || 'user'
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      setShowScrollTop(scrollRef.current.scrollTop > 300)
+    }
+  }
+
+  const scrollToTop = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col lg:flex-row">
@@ -179,11 +195,29 @@ export function MainLayout() {
           </h2>
         </header>
 
-        <div id="main-scroll-container" className="flex-1 overflow-auto p-4 lg:p-8 bg-[var(--color-bg)] relative">
+        <div 
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-auto p-4 lg:p-8 bg-[var(--color-bg)] relative"
+        >
           <div className="max-w-6xl mx-auto h-full">
             <Outlet />
           </div>
-          <ScrollToTopButton />
+
+          <AnimatePresence>
+            {showScrollTop && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                onClick={scrollToTop}
+                className="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 z-50 p-3 bg-[var(--color-accent)] text-white rounded-full shadow-[var(--shadow-card-hover)] hover:bg-[var(--color-accent-hover)] hover:scale-105 transition-all focus:outline-none"
+                aria-label="Kembali ke atas"
+              >
+                <ArrowUp size={24} strokeWidth={2.5} />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 

@@ -38,5 +38,3 @@ export { DropdownMenu } from './DropdownMenu'
 export type { DropdownMenuProps, DropdownMenuItem } from './DropdownMenu'
 
 export { AnimatedNumber } from './AnimatedNumber'
-
-export { ScrollToTopButton } from './ScrollToTopButton'
