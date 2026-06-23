@@ -32,6 +32,7 @@ export async function getDashboardStatistics(): Promise<DashboardStats> {
   const { data: sessions, error } = await supabase
     .from('sessions')
     .select('status, stats:session_stats_snapshot(total_participants, total_attended)')
+    .is('deleted_at', null)
     
   if (error) throw error
 
@@ -57,6 +58,7 @@ export async function getAttendanceBySession(): Promise<SessionAttendanceData[]>
   const { data: sessions, error } = await supabase
     .from('sessions')
     .select('name, created_at, stats:session_stats_snapshot(total_participants, total_attended)')
+    .is('deleted_at', null)
     .order('created_at', { ascending: true })
 
   if (error) throw error
@@ -82,6 +84,7 @@ export async function getAttendanceTrend(): Promise<TrendData[]> {
   const { data: sessions, error } = await supabase
     .from('sessions')
     .select('name, created_at, stats:session_stats_snapshot(total_participants, total_attended)')
+    .is('deleted_at', null)
     .order('created_at', { ascending: true })
 
   if (error) throw error

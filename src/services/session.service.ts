@@ -60,7 +60,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     throw new Error('Gagal mengambil statistik dashboard')
   }
 
-  let total_sessions = data.length
+  const total_sessions = data.length
   let total_participants = 0
   let total_attended = 0
 

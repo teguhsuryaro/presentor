@@ -106,10 +106,34 @@ export function AuditLogPage() {
     setPage(1)
   }
 
-  const formatMetadata = (metadata: any) => {
+  const formatMetadata = (metadata: any, action: AuditAction) => {
     if (!metadata) return null
+    
+    // Format khusus untuk batch manual attendance
+    if (action === 'attendance_correction' && metadata.action === 'batch_manual') {
+      return (
+        <div className="mt-2 text-sm text-[var(--color-text-secondary)] bg-[var(--color-accent-soft)] p-3 rounded-[var(--radius-md)]">
+          <p className="font-medium text-[var(--color-text-primary)]">
+            Presensi manual untuk {metadata.total_changes} peserta
+          </p>
+          <div className="flex gap-4 mt-1 text-xs">
+            {metadata.marked_count > 0 && (
+              <span className="text-[var(--color-success)]">
+                ✓ {metadata.marked_count} ditandai hadir
+              </span>
+            )}
+            {metadata.unmarked_count > 0 && (
+              <span className="text-[var(--color-danger)]">
+                ✗ {metadata.unmarked_count} dibatalkan
+              </span>
+            )}
+          </div>
+        </div>
+      )
+    }
+
     return (
-      <div className="mt-2 text-xs font-[var(--font-mono)] bg-[var(--color-surface-hover)] p-2 rounded border border-[var(--color-border)] text-[var(--color-text-secondary)]">
+      <div className="mt-2 text-xs font-[var(--font-mono)] bg-[var(--color-surface-hover)] p-2 rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-text-secondary)]">
         {Object.entries(metadata).map(([key, value]) => (
           <div key={key}>
             <span className="font-semibold text-[var(--color-text-primary)]">{key}:</span> {String(value)}
@@ -186,15 +210,28 @@ export function AuditLogPage() {
           <div className="divide-y divide-[var(--color-border)]">
             {logs.map((log) => {
               const Icon = ACTION_ICONS[log.action] || Activity
+              
+              // Custom label untuk batch manual
+              let displayLabel = ACTION_LABELS[log.action] || log.action
+              let isBatch = false
+              if (log.action === 'attendance_correction' && log.metadata?.action === 'batch_manual') {
+                displayLabel = `Presensi manual untuk ${log.metadata.total_changes} peserta`
+                isBatch = true
+              }
+
               return (
                 <div key={log.id} className="p-4 sm:p-5 hover:bg-[var(--color-surface-hover)] transition-colors flex gap-4">
-                  <div className="mt-1 shrink-0 w-10 h-10 bg-[var(--color-bg)] rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-secondary)]">
+                  <div className={`mt-1 shrink-0 w-10 h-10 rounded-full border flex items-center justify-center ${
+                    isBatch 
+                      ? 'bg-[var(--color-accent-soft)] border-[var(--color-accent)]/20 text-[var(--color-accent)]' 
+                      : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-secondary)]'
+                  }`}>
                     <Icon size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 mb-1">
                       <h3 className="font-semibold text-[var(--color-text-primary)]">
-                        {ACTION_LABELS[log.action] || log.action}
+                        {displayLabel}
                       </h3>
                       <span className="text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)] whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString('id-ID', {
@@ -216,7 +253,7 @@ export function AuditLogPage() {
                       )}
                     </div>
 
-                    {log.metadata && Object.keys(log.metadata).length > 0 && formatMetadata(log.metadata)}
+                    {log.metadata && Object.keys(log.metadata).length > 0 && formatMetadata(log.metadata, log.action)}
                   </div>
                 </div>
               )

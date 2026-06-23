@@ -34,8 +34,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             type={type === 'password' && showPassword ? 'text' : type}
             className={cn(
-              "w-full px-3 py-2 border rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text-primary)] transition-all duration-200",
-              "placeholder:text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)]",
+              "w-full px-3 py-2 border rounded-[var(--radius-md)] bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] transition-all duration-200",
+              "placeholder:text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]",
               error ? "border-[var(--color-danger)] ring-1 ring-[var(--color-danger)] focus:ring-[var(--color-danger)] focus:border-[var(--color-danger)]" : "border-[var(--color-border)]",
               leftIcon ? "pl-10" : "",
               (rightIcon || type === 'password') ? "pr-10" : "",

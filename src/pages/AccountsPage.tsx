@@ -99,7 +99,7 @@ export function AccountsPage() {
         </Button>
       </div>
 
-      <Card className="overflow-hidden bg-[var(--color-surface)]">
+      <Card className="bg-[var(--color-surface)]">
         {isLoading ? (
           <div className="p-8 text-center text-[var(--color-text-secondary)]">Memuat daftar akun...</div>
         ) : (

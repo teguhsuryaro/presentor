@@ -22,7 +22,7 @@ export function TrashPage() {
     fetchTrashedSessions()
   }, [])
 
-  const fetchTrashedSessions = async () => {
+  async function fetchTrashedSessions() {
     setIsLoading(true)
     try {
       const data = await getTrashedSessions()

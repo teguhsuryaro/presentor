@@ -12,16 +12,16 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles = {
-  primary: 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] border border-transparent',
-  secondary: 'bg-transparent border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg)]',
+  primary: 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] border border-transparent hover:shadow-md hover:shadow-[var(--color-accent)]/20',
+  secondary: 'bg-transparent border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]',
   danger: 'bg-[var(--color-danger)] text-white border border-transparent hover:bg-red-800',
-  ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text-primary)] border border-transparent',
+  ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)] border border-transparent',
 }
 
 const sizeStyles = {
-  sm: 'px-3 py-1.5 text-sm rounded-[var(--radius-sm)]',
+  sm: 'px-3 py-1.5 text-sm rounded-[var(--radius-md)]',
   md: 'px-4 py-2 text-sm rounded-[var(--radius-md)]',
-  lg: 'px-6 py-3 text-base rounded-[var(--radius-md)]',
+  lg: 'px-6 py-3 text-base rounded-[var(--radius-lg)]',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

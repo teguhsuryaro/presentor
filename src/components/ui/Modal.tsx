@@ -58,13 +58,13 @@ export function Modal({ isOpen, onClose, title, description, children, footer, s
             aria-labelledby="modal-title"
             {...scaleIn}
             className={cn(
-              "relative w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-[var(--shadow-card-hover)] overflow-hidden flex flex-col max-h-[90vh]",
+              "relative w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-card-hover)] overflow-hidden flex flex-col max-h-[90vh]",
               sizeStyles[size]
             )}
           >
             <div className="flex items-center justify-between p-4 md:p-5 border-b border-[var(--color-border)]">
               <div>
-                <h2 id="modal-title" className="text-lg font-semibold font-[var(--font-display)] text-[var(--color-text-primary)]">
+                <h2 id="modal-title" className="text-lg font-bold font-[var(--font-display)] text-[var(--color-text-primary)]">
                   {title}
                 </h2>
                 {description && (

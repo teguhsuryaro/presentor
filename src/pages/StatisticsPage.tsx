@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid, Legend } from 'recharts'
 import { Card, Skeleton, AnimatedNumber } from '../components/ui'
 import { useToast } from '../context/ToastContext'
-import { Users, UserCheck, Activity, Calendar } from 'lucide-react'
+import { Activity, Calendar } from 'lucide-react'
 import {
   getDashboardStatistics,
   getAttendanceBySession,
@@ -15,12 +15,13 @@ import {
 } from '../services/statistics.service'
 
 const COLORS = {
-  accent: '#D9651A',
-  accentHover: '#B8520F',
-  accentSoft: '#FBE6D6',
-  border: '#E5DED3',
-  text: '#2B2521',
-  textSecondary: '#6B6258'
+  accent: '#6C5CE7',
+  accentHover: '#5A4BD1',  
+  accentSoft: '#F0EDFF',
+  border: '#E0E3EB',
+  text: '#2D3436',
+  textSecondary: '#636E72',
+  success: '#00B894'
 }
 
 export function StatisticsPage() {
@@ -61,9 +62,7 @@ export function StatisticsPage() {
     return (
       <div className="space-y-6 pb-20">
         <h1 className="text-2xl font-bold font-[var(--font-display)]">Statistik & Analisis</h1>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Skeleton variant="card" height="120px" />
-          <Skeleton variant="card" height="120px" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Skeleton variant="card" height="120px" />
           <Skeleton variant="card" height="120px" />
         </div>
@@ -93,7 +92,7 @@ export function StatisticsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="p-5">
           <div className="flex justify-between items-start">
             <div>
@@ -102,36 +101,8 @@ export function StatisticsPage() {
                 <AnimatedNumber value={stats.totalSessions} />
               </div>
             </div>
-            <div className="p-3 bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] rounded-full">
+            <div className="p-3 bg-[var(--color-accent-soft)] text-[var(--color-accent)] rounded-[var(--radius-md)]">
               <Calendar size={20} strokeWidth={2} />
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-[var(--color-text-secondary)]">Total Peserta (Kumulatif)</p>
-              <div className="mt-1 text-3xl font-bold font-[var(--font-display)] text-[var(--color-text-primary)]">
-                <AnimatedNumber value={stats.totalParticipants} />
-              </div>
-            </div>
-            <div className="p-3 bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] rounded-full">
-              <Users size={20} strokeWidth={2} />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-5 border-l-4 border-l-[var(--color-success)]">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-[var(--color-text-secondary)]">Total Kehadiran</p>
-              <div className="mt-1 text-3xl font-bold font-[var(--font-display)] text-[var(--color-success)]">
-                <AnimatedNumber value={stats.totalAttended} />
-              </div>
-            </div>
-            <div className="p-3 bg-green-50 text-[var(--color-success)] rounded-full">
-              <UserCheck size={20} strokeWidth={2} />
             </div>
           </div>
         </Card>
@@ -144,7 +115,7 @@ export function StatisticsPage() {
                 <AnimatedNumber value={Math.round(stats.attendancePercentage)} />%
               </div>
             </div>
-            <div className="p-3 bg-[var(--color-accent-soft)] text-[var(--color-accent)] rounded-full">
+            <div className="p-3 bg-[var(--color-accent-soft)] text-[var(--color-accent)] rounded-[var(--radius-md)]">
               <Activity size={20} strokeWidth={2} />
             </div>
           </div>
@@ -175,7 +146,7 @@ export function StatisticsPage() {
                 </Pie>
                 <Tooltip 
                   formatter={(value: any) => [new Intl.NumberFormat('id-ID').format(value) + ' Orang', '']}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)' }}
+                  contentStyle={{ borderRadius: '10px', border: '1px solid #E0E3EB', backgroundColor: '#FFFFFF', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                 />
                 <Legend verticalAlign="bottom" height={36}/>
               </PieChart>
@@ -206,14 +177,14 @@ export function StatisticsPage() {
                 />
                 <Tooltip 
                   cursor={{ fill: 'var(--color-surface-hover)' }}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}
+                  contentStyle={{ borderRadius: '10px', border: '1px solid #E0E3EB', backgroundColor: '#FFFFFF', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                   formatter={(value: any, name: string) => {
                     if (name === 'persentase') return [`${value}%`, 'Kehadiran']
                     if (name === 'hadir') return [`${value} Orang`, 'Hadir']
                     return [value, name]
                   }}
                 />
-                <Bar dataKey="persentase" fill={COLORS.accent} radius={[4, 4, 0, 0]} name="Kehadiran (%)" />
+                <Bar dataKey="persentase" fill={COLORS.accent} radius={[6, 6, 0, 0]} name="Kehadiran (%)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -247,7 +218,7 @@ export function StatisticsPage() {
                   tick={{ fontSize: 12, fill: COLORS.textSecondary }}
                 />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)' }}
+                  contentStyle={{ borderRadius: '10px', border: '1px solid #E0E3EB', backgroundColor: '#FFFFFF', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                   labelStyle={{ fontWeight: 'bold', color: COLORS.text, marginBottom: '4px' }}
                 />
                 <Area 
@@ -287,10 +258,10 @@ export function StatisticsPage() {
                   />
                   <Tooltip 
                     cursor={{ fill: 'var(--color-surface-hover)' }}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)' }}
+                    contentStyle={{ borderRadius: '10px', border: '1px solid #E0E3EB', backgroundColor: '#FFFFFF', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                     formatter={(value: any) => [`${value} Presensi`, 'Jumlah']}
                   />
-                  <Bar dataKey="count" fill="#3F7D4F" radius={[4, 4, 0, 0]} name="Jumlah Presensi" />
+                  <Bar dataKey="count" fill={COLORS.success} radius={[6, 6, 0, 0]} name="Jumlah Presensi" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

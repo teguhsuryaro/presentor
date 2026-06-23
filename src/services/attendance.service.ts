@@ -40,8 +40,8 @@ export async function markAttendance(
     })
 
   if (error) {
-    if (error.code === '23505') { // unique violation
-      throw new Error('Peserta ini sudah melakukan presensi.')
+    if (error.code === '23505') { // unique violation — record sudah ada, anggap berhasil
+      return
     }
     throw new Error('Gagal mencatat kehadiran: ' + error.message)
   }
@@ -76,3 +76,63 @@ export async function unmarkAttendance(
     p_metadata: { action: 'unmark', participant_id: participantId }
   })
 }
+
+export async function batchMarkAttendance(
+  sessionId: string,
+  markParticipantIds: string[],
+  unmarkParticipantIds: string[],
+  userId: string
+): Promise<void> {
+  // 1. Batch INSERT untuk peserta yang ditandai hadir
+  if (markParticipantIds.length > 0) {
+    const insertData = markParticipantIds.map(pid => ({
+      session_id: sessionId,
+      participant_id: pid,
+      method: 'manual_checklist' as const,
+      recorded_by: userId
+    }))
+
+    const { error: insertError } = await supabase
+      .from('attendance_records')
+      .upsert(insertData, { 
+        onConflict: 'session_id,participant_id',
+        ignoreDuplicates: true 
+      })
+
+    if (insertError) {
+      throw new Error('Gagal menyimpan kehadiran batch: ' + insertError.message)
+    }
+  }
+
+  // 2. Batch DELETE untuk peserta yang dibatalkan kehadirannya
+  if (unmarkParticipantIds.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('attendance_records')
+      .delete()
+      .eq('session_id', sessionId)
+      .in('participant_id', unmarkParticipantIds)
+
+    if (deleteError) {
+      throw new Error('Gagal membatalkan kehadiran batch: ' + deleteError.message)
+    }
+  }
+
+  // 3. Buat SATU log audit untuk seluruh batch
+  const totalMarked = markParticipantIds.length
+  const totalUnmarked = unmarkParticipantIds.length
+  
+  await supabase.rpc('create_audit_log', {
+    p_user_id: userId,
+    p_action: 'attendance_correction',
+    p_related_session_id: sessionId,
+    p_metadata: {
+      action: 'batch_manual',
+      marked_count: totalMarked,
+      unmarked_count: totalUnmarked,
+      total_changes: totalMarked + totalUnmarked,
+      marked_participant_ids: markParticipantIds,
+      unmarked_participant_ids: unmarkParticipantIds
+    }
+  })
+}
+

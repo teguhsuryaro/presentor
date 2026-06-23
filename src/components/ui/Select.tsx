@@ -36,8 +36,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
             className={cn(
-              "w-full appearance-none px-3 py-2 pr-10 border rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-text-primary)] transition-all duration-200",
-              "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)]",
+              "w-full appearance-none px-3 py-2 pr-10 border rounded-[var(--radius-md)] bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] transition-all duration-200",
+              "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]",
               error ? "border-[var(--color-danger)] ring-1 ring-[var(--color-danger)]" : "border-[var(--color-border)]",
               disabled && "opacity-50 cursor-not-allowed bg-[var(--color-bg)]",
               className

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Modal, Input, Button, Select } from '../ui'
-import { EventSelector } from './EventSelector'
 import { createSession, getSessions, copyParticipants } from '../../services/session.service'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -14,7 +13,6 @@ interface CreateSessionModalProps {
 export function CreateSessionModal({ isOpen, onClose, onSuccess }: CreateSessionModalProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [eventId, setEventId] = useState<string | undefined>(undefined)
   const [sourceSessionId, setSourceSessionId] = useState<string>('')
   
   const [existingSessions, setExistingSessions] = useState<any[]>([])
@@ -33,7 +31,6 @@ export function CreateSessionModal({ isOpen, onClose, onSuccess }: CreateSession
       // Reset form
       setName('')
       setDescription('')
-      setEventId(undefined)
       setSourceSessionId('')
     }
   }, [isOpen])
@@ -46,8 +43,7 @@ export function CreateSessionModal({ isOpen, onClose, onSuccess }: CreateSession
     try {
       const newSession = await createSession({
         name,
-        description,
-        event_id: eventId
+        description
       }, user.id)
 
       if (sourceSessionId) {
@@ -73,47 +69,44 @@ export function CreateSessionModal({ isOpen, onClose, onSuccess }: CreateSession
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Buat Sesi Baru">
-      <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+    <Modal isOpen={isOpen} onClose={onClose} title="Buat Sesi Baru" description="Isi detail sesi presensi yang akan dibuat.">
+      <form onSubmit={handleSubmit} className="space-y-5 pt-2">
         <Input
-          label="Nama Sesi *"
+          label="Nama Sesi"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Misal: Sesi Materi 1"
+          placeholder="Contoh: Sesi Materi Hari 1"
           required
           disabled={isSubmitting}
         />
         
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-[var(--color-text-primary)]">Deskripsi</label>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-[var(--color-text-primary)]">
+            Deskripsi
+            <span className="ml-1 text-xs text-[var(--color-text-secondary)] font-normal">(opsional)</span>
+          </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full min-h-[80px] p-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)] transition-all resize-y"
-            placeholder="Opsional"
+            className="w-full min-h-[100px] p-3 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] text-sm placeholder:text-[var(--color-text-secondary)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-all resize-y"
+            placeholder="Tambahkan deskripsi singkat untuk sesi ini..."
             disabled={isSubmitting}
           />
         </div>
 
-        <EventSelector
-          value={eventId}
-          onChange={setEventId}
-          disabled={isSubmitting}
-        />
-
-        <div className="pt-4 border-t border-[var(--color-border)]">
+        <div className="pt-2 border-t border-[var(--color-border)]">
           <Select
-            label="Salin Peserta Dari Sesi Lain (Opsional)"
+            label="Salin Peserta Dari Sesi Lain"
             value={sourceSessionId}
             onChange={setSourceSessionId}
             options={[
-              { value: '', label: '-- Jangan Salin Peserta --' },
+              { value: '', label: '— Tidak Menyalin —' },
               ...existingSessions.map(s => ({ value: s.id, label: s.name }))
             ]}
             disabled={isSubmitting}
           />
-          <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-            Hanya data peserta yang akan disalin. Data kehadiran TIDAK akan ikut disalin.
+          <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
+            Hanya daftar peserta yang akan disalin. Data kehadiran tidak ikut disalin.
           </p>
         </div>
 

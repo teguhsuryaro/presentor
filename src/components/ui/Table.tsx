@@ -48,7 +48,7 @@ export function Table<T>({
   return (
     <div className="w-full overflow-x-auto border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)]">
       <table className="w-full text-left border-collapse">
-        <thead className="bg-[var(--color-bg)] sticky top-0 z-10 border-b border-[var(--color-border)]">
+        <thead className="bg-[var(--color-surface-hover)] sticky top-0 z-10 border-b border-[var(--color-border)]">
           <tr>
             {columns.map((col) => (
               <th
@@ -99,7 +99,7 @@ export function Table<T>({
                 <tr
                   key={id}
                   className={cn(
-                    "border-b border-[var(--color-border)] last:border-0 transition-colors duration-200 hover:bg-[var(--color-accent-soft)]/50",
+                    "border-b border-[var(--color-border)] last:border-0 transition-colors duration-200 hover:bg-[var(--color-accent-soft)]",
                     idx % 2 === 0 ? "bg-[var(--color-surface)]" : "bg-[var(--color-bg)]/30",
                     isHighlighted && "animate-[highlight-fade_1s_ease-out]"
                   )}

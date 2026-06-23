@@ -7,10 +7,10 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantStyles = {
-  success: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-  warning: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-transparent',
-  danger: 'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-transparent',
-  default: 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] border border-[var(--color-border)]',
+  success: 'bg-[var(--color-success-soft)] text-[var(--color-success)] border border-transparent',
+  warning: 'bg-[var(--color-warning-soft)] text-[var(--color-warning)] border border-transparent',
+  danger: 'bg-[var(--color-danger-soft)] text-[var(--color-danger)] border border-transparent',
+  default: 'bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border border-[var(--color-border)]',
   accent: 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-transparent',
 }
 

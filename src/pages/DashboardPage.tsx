@@ -1,10 +1,11 @@
 import type { DashboardStats } from '../services/statistics.service'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Users, UserCheck, TrendingUp, Plus, MoreVertical, FileText, Play } from 'lucide-react'
+import { CalendarDays, TrendingUp, Plus, MoreVertical, FileText, Play } from 'lucide-react'
 import { getSessions, getDashboardStats, softDeleteSession, openSession, closeSession } from '../services/session.service'
 import type { SessionWithStats } from '../types'
 import { supabase } from '../lib/supabase'
+import { cn } from '../lib/utils'
 import { 
   Card, Button, Badge, Skeleton, AnimatedNumber, Select, DropdownMenu, ConfirmDialog 
 } from '../components/ui'
@@ -141,7 +142,7 @@ export function DashboardPage() {
             )}
           </div>
         </div>
-        <div className="p-3 bg-[var(--color-accent-soft)] text-[var(--color-accent)] rounded-full">
+        <div className="p-3 bg-[var(--color-accent-soft)] text-[var(--color-accent)] rounded-[var(--radius-md)]">
           <Icon size={24} strokeWidth={1.5} />
         </div>
       </div>
@@ -151,10 +152,8 @@ export function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <StatCard title="Total Sesi" value={stats?.total_sessions || 0} icon={CalendarDays} />
-        <StatCard title="Total Peserta" value={stats?.total_participants || 0} icon={Users} />
-        <StatCard title="Total Hadir" value={stats?.total_attended || 0} icon={UserCheck} />
         <StatCard title="Kehadiran" value={stats?.attendance_percentage || 0} icon={TrendingUp} percentage />
       </div>
 
@@ -188,11 +187,13 @@ export function DashboardPage() {
             <Skeleton variant="card" height="120px" />
           </div>
         ) : sessions.length === 0 ? (
-          <div className="text-center py-12 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)]">
-            <CalendarDays size={48} className="mx-auto text-[var(--color-text-secondary)] opacity-50 mb-4" />
-            <h4 className="text-lg font-medium text-[var(--color-text-primary)]">Belum ada sesi</h4>
-            <p className="text-sm text-[var(--color-text-secondary)] mt-1 mb-4">Buat sesi presensi pertama Anda untuk memulai.</p>
-            <Button onClick={() => setIsCreateOpen(true)} leftIcon={<Plus size={18} />} variant="secondary">
+          <div className="text-center py-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]">
+            <div className="w-16 h-16 mx-auto bg-[var(--color-accent-soft)] rounded-full flex items-center justify-center mb-4">
+              <CalendarDays size={32} className="text-[var(--color-accent)]" />
+            </div>
+            <h4 className="text-lg font-semibold font-[var(--font-display)] text-[var(--color-text-primary)]">Belum ada sesi</h4>
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1 mb-6">Buat sesi presensi pertama Anda untuk memulai.</p>
+            <Button onClick={() => setIsCreateOpen(true)} leftIcon={<Plus size={18} />}>
               Buat Sesi Baru
             </Button>
           </div>
@@ -201,30 +202,26 @@ export function DashboardPage() {
             {sessions.map((session) => (
               <Card 
                 key={session.id} 
-                accentStrip={session.status === 'aktif'}
-                className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className={cn(
+                  "p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group",
+                  session.status === 'aktif' && "border-l-4 border-l-[var(--color-accent)]"
+                )}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h4 className="text-lg font-bold font-[var(--font-display)] text-[var(--color-text-primary)]">
                       {session.name}
                     </h4>
-                    <Badge variant={session.status === 'aktif' ? 'accent' : 'default'} className="uppercase">
+                    <Badge variant={session.status === 'aktif' ? 'accent' : 'default'} className="uppercase text-[10px] tracking-wider">
                       {session.status}
                     </Badge>
                   </div>
                   <div className="text-sm text-[var(--color-text-secondary)] flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span>{new Date(session.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                    <span className="hidden sm:inline">•</span>
+                    <span className="hidden sm:inline text-[var(--color-border)]">•</span>
                     <span>
-                      Kehadiran: <span className="font-medium text-[var(--color-text-primary)]">{session.stats?.total_attended || 0}</span> / {session.stats?.total_participants || 0}
+                      Kehadiran: <span className="font-semibold text-[var(--color-text-primary)]">{session.stats?.total_attended || 0}</span> / {session.stats?.total_participants || 0}
                     </span>
-                    {session.event && (
-                      <>
-                        <span className="hidden sm:inline">•</span>
-                        <span>Event: <span className="font-medium text-[var(--color-text-primary)]">{session.event.name}</span></span>
-                      </>
-                    )}
                   </div>
                 </div>
 
@@ -249,7 +246,7 @@ export function DashboardPage() {
                   
                   <DropdownMenu
                     trigger={
-                      <button className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg)] rounded-[var(--radius-sm)] transition-colors">
+                      <button className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] rounded-[var(--radius-sm)] transition-colors">
                         <MoreVertical size={20} />
                       </button>
                     }

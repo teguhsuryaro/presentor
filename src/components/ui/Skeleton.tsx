@@ -9,7 +9,7 @@ export interface SkeletonProps {
 }
 
 export function Skeleton({ variant = 'text', width, height, lines = 1, className }: SkeletonProps) {
-  const baseClass = "bg-[var(--color-border)] animate-pulse rounded-[var(--radius-sm)]"
+  const baseClass = "bg-[var(--color-surface-hover)] animate-pulse rounded-[var(--radius-sm)]"
 
   if (variant === 'text') {
     return (

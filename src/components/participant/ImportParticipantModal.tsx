@@ -170,7 +170,7 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
           <FileText size={14} className="text-blue-500" /> .CSV
         </div>
         <div className="flex items-center gap-2 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg)] px-3 py-1.5 rounded-full border border-[var(--color-border)]">
-          <FileSpreadsheet size={14} className="text-green-500" /> .XLSX
+          <FileSpreadsheet size={14} className="text-[var(--color-success)]" /> .XLSX
         </div>
       </div>
       <Button onClick={() => fileInputRef.current?.click()} isLoading={isProcessing}>
@@ -190,7 +190,7 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
       <div className="space-y-6">
         <div className="p-4 bg-[var(--color-surface-hover)] rounded-[var(--radius-md)] border border-[var(--color-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {file?.name.endsWith('.csv') ? <FileText className="text-blue-500" /> : <FileSpreadsheet className="text-green-500" />}
+            {file?.name.endsWith('.csv') ? <FileText className="text-[var(--color-info)]" /> : <FileSpreadsheet className="text-[var(--color-success)]" />}
             <div>
               <p className="font-medium text-[var(--color-text-primary)] text-sm">{file?.name}</p>
               <p className="text-xs text-[var(--color-text-secondary)]">{parsedData.rows.length} baris terdeteksi</p>

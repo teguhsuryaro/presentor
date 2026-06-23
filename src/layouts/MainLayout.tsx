@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { 
-  Home, CalendarDays, Users, BarChart3, History, Trash2, UserCog, Settings, LogOut, Menu, X
+  Home, BarChart3, History, Trash2, UserCog, Settings, LogOut, Menu, X, Search
 } from 'lucide-react'
 import { cn } from '../lib/utils'
-import { motion } from 'framer-motion'
-
-// Placeholder user data until Auth Context is ready
-const user = { role: 'super_admin', full_name: 'Super Administrator' }
+import { useAuth } from '../context/AuthContext'
+import { ConfirmDialog } from '../components/ui'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
@@ -22,25 +20,60 @@ const bottomNavItems = [
   { path: '/profile', label: 'Profil', icon: Settings },
 ]
 
+const pageTitles: Record<string, string> = {
+  '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
+  '/stats': 'Statistik',
+  '/history': 'Riwayat Aktivitas',
+  '/trash': 'Tempat Sampah',
+  '/admin/users': 'Manajemen Akun',
+  '/profile': 'Pengaturan Profil',
+}
+
 export function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [confirmLogout, setConfirmLogout] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
   
   // Close sidebar on mobile when navigating
   useEffect(() => {
     setIsSidebarOpen(false)
   }, [location.pathname])
 
-  const pageTitle = location.pathname === '/' 
-    ? 'Dashboard' 
-    : location.pathname.split('/')[1].replace('-', ' ')
+  // Resolve page title
+  let pageTitle = pageTitles[location.pathname] || 'Presentor'
+  if (location.pathname.startsWith('/sessions/') && location.pathname.includes('/presensi')) {
+    pageTitle = 'Mode Presensi'
+  } else if (location.pathname.startsWith('/sessions/')) {
+    pageTitle = 'Detail Sesi'
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      setConfirmLogout(false)
+      navigate('/login', { replace: true })
+    } catch (e) {
+      console.error('Logout error:', e)
+    }
+  }
+
+  const displayName = user?.full_name || 'User'
+  const displayRole = user?.role?.replace('_', ' ') || 'user'
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col lg:flex-row">
       
       {/* Mobile Header */}
       <header className="lg:hidden flex items-center justify-between p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-30">
-        <div className="font-[var(--font-display)] font-semibold text-lg text-[var(--color-accent)]">Presentor</div>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[var(--color-accent)] rounded-[var(--radius-sm)] flex items-center justify-center">
+            <span className="text-white font-bold text-sm">P</span>
+          </div>
+          <span className="font-[var(--font-display)] font-semibold text-lg text-[var(--color-text-primary)]">Presentor</span>
+        </div>
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 -mr-2 text-[var(--color-text-secondary)]">
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -56,11 +89,16 @@ export function MainLayout() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 w-[260px] bg-[var(--color-surface)] shadow-[var(--shadow-sidebar)] flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-6 hidden lg:block">
-          <h1 className="font-[var(--font-display)] font-bold text-2xl text-[var(--color-accent)]">Presentor</h1>
+        <div className="p-6 hidden lg:flex items-center gap-3">
+          <div className="w-9 h-9 bg-[var(--color-accent)] rounded-[var(--radius-md)] flex items-center justify-center">
+            <span className="text-white font-bold text-lg">P</span>
+          </div>
+          <h1 className="font-[var(--font-display)] font-bold text-xl text-[var(--color-text-primary)]">
+            Presentor
+          </h1>
         </div>
 
         <div className="flex-1 overflow-y-auto py-4 flex flex-col gap-1 px-3">
@@ -68,11 +106,12 @@ export function MainLayout() {
             <NavLink
               key={item.path}
               to={item.path}
+              end={item.path === '/'}
               className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-4 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-all duration-200",
                 isActive 
-                  ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]" 
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text-primary)]"
+                  ? "bg-[var(--color-accent)] text-white shadow-md shadow-[var(--color-accent)]/20" 
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
               )}
             >
               <item.icon size={18} />
@@ -82,14 +121,14 @@ export function MainLayout() {
 
           <div className="my-4 border-t border-[var(--color-border)]" />
 
-          {user.role === 'super_admin' && (
+          {user?.role === 'super_admin' && (
             <NavLink
               to="/admin/users"
               className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-4 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-all duration-200",
                 isActive 
-                  ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]" 
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text-primary)]"
+                  ? "bg-[var(--color-accent)] text-white shadow-md shadow-[var(--color-accent)]/20" 
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
               )}
             >
               <UserCog size={18} />
@@ -100,10 +139,10 @@ export function MainLayout() {
           <NavLink
             to="/profile"
             className={({ isActive }) => cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-colors",
+              "flex items-center gap-3 px-4 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-all duration-200",
               isActive 
-                ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]" 
-                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text-primary)]"
+                ? "bg-[var(--color-accent)] text-white shadow-md shadow-[var(--color-accent)]/20" 
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
             )}
           >
             <Settings size={18} />
@@ -112,16 +151,19 @@ export function MainLayout() {
         </div>
 
         <div className="p-4 border-t border-[var(--color-border)]">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-8 h-8 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center font-bold font-[var(--font-display)]">
-              {user.full_name.charAt(0)}
+          <div className="flex items-center gap-3 p-3 rounded-[var(--radius-md)] bg-[var(--color-bg)]">
+            <div className="w-10 h-10 rounded-full bg-[var(--color-accent)] text-white flex items-center justify-center font-bold font-[var(--font-display)] text-sm">
+              {displayName.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">{user.full_name}</p>
-              <p className="text-xs text-[var(--color-text-secondary)] capitalize">{user.role.replace('_', ' ')}</p>
+              <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{displayName}</p>
+              <p className="text-xs text-[var(--color-text-secondary)] capitalize">{displayRole}</p>
             </div>
           </div>
-          <button className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-[var(--color-danger)] bg-[var(--color-danger)]/10 hover:bg-[var(--color-danger)]/20 rounded-[var(--radius-md)] transition-colors">
+          <button 
+            onClick={() => setConfirmLogout(true)}
+            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] rounded-[var(--radius-md)] transition-colors"
+          >
             <LogOut size={16} />
             Keluar
           </button>
@@ -131,22 +173,29 @@ export function MainLayout() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden pb-16 lg:pb-0">
         {/* Desktop Header */}
-        <header className="hidden lg:flex items-center h-16 px-8 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-          <h2 className="text-lg font-semibold font-[var(--font-display)] text-[var(--color-text-primary)] capitalize">
+        <header className="hidden lg:flex items-center justify-between h-16 px-8 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
+          <h2 className="text-xl font-bold font-[var(--font-display)] text-[var(--color-text-primary)]">
             {pageTitle}
           </h2>
+          <div className="flex items-center gap-4">
+            {/* Search Icon (decorative/future) */}
+            <button className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] rounded-full transition-colors">
+              <Search size={20} />
+            </button>
+            {/* User Info */}
+            <div className="flex items-center gap-3 pl-4 border-l border-[var(--color-border)]">
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">{displayName}</span>
+              <div className="w-9 h-9 rounded-full bg-[var(--color-accent)] text-white flex items-center justify-center font-bold font-[var(--font-display)] text-sm">
+                {displayName.charAt(0)}
+              </div>
+            </div>
+          </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-4 lg:p-8">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="max-w-6xl mx-auto h-full"
-          >
+        <div className="flex-1 overflow-auto p-4 lg:p-8 bg-[var(--color-bg)]">
+          <div className="max-w-6xl mx-auto h-full">
             <Outlet />
-          </motion.div>
+          </div>
         </div>
       </main>
 
@@ -156,6 +205,7 @@ export function MainLayout() {
           <NavLink
             key={item.path}
             to={item.path}
+            end={item.path === '/'}
             className={({ isActive }) => cn(
               "flex flex-col items-center justify-center w-full py-2.5 gap-1 transition-colors",
               isActive ? "text-[var(--color-accent)]" : "text-[var(--color-text-secondary)]"
@@ -167,6 +217,16 @@ export function MainLayout() {
         ))}
       </nav>
 
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmLogout}
+        title="Konfirmasi Logout"
+        message="Apakah Anda yakin ingin keluar dari sistem Presentor?"
+        variant="danger"
+        confirmText="Ya, Keluar"
+        onConfirm={handleLogout}
+        onCancel={() => setConfirmLogout(false)}
+      />
     </div>
   )
 }

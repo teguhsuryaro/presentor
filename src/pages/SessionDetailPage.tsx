@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Users, UserCheck, UserMinus, TrendingUp, Search, Download, Plus, Play, MoreVertical } from 'lucide-react'
+import { ArrowLeft, Users, UserCheck, UserMinus, TrendingUp, Search, Download, Plus, Play, MoreVertical, Check, Pencil } from 'lucide-react'
 
 import { getSessionById, openSession, closeSession } from '../services/session.service'
-import { getParticipantsWithAttendance, markAttendance, unmarkAttendance } from '../services/attendance.service'
+import { getParticipantsWithAttendance, markAttendance, unmarkAttendance, batchMarkAttendance } from '../services/attendance.service'
 import { deleteParticipant } from '../services/participant.service'
 import { generatePDF, generateCSV } from '../services/report.service'
 import type { SessionWithStats, ParticipantWithAttendance } from '../types'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+import { cn } from '../lib/utils'
 import { Card, Button, Badge, Skeleton, AnimatedNumber, Input, ConfirmDialog, DropdownMenu } from '../components/ui'
 import { AddParticipantModal } from '../components/participant/AddParticipantModal'
 import { EditParticipantModal } from '../components/participant/EditParticipantModal'
@@ -28,6 +29,9 @@ export function SessionDetailPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'semua' | 'hadir' | 'belum'>('semua')
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null)
+  const [isManualMode, setIsManualMode] = useState(false)
+  const [pendingChanges, setPendingChanges] = useState<Map<string, boolean>>(new Map())
+  const [isSubmittingBatch, setIsSubmittingBatch] = useState(false)
 
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
@@ -103,15 +107,39 @@ export function SessionDetailPage() {
   const handleToggleAttendance = async (p: ParticipantWithAttendance) => {
     if (!id || !user) return
 
-    const isAttending = !p.attendance
+    if (isManualMode) {
+      // Mode batch: hanya update state lokal
+      setPendingChanges(prev => {
+        const newMap = new Map(prev)
+        const currentlyAttended = !!p.attendance
+        const isPending = newMap.has(p.id)
+        
+        if (isPending) {
+          // Toggle kembali — hapus dari pending
+          newMap.delete(p.id)
+        } else {
+          // Tambah ke pending — toggle dari status saat ini
+          newMap.set(p.id, !currentlyAttended)
+        }
+        
+        return newMap
+      })
+      return
+    }
 
+    // Mode non-manual (langsung simpan — untuk backward compatibility jika ada)
+    const isAttending = !p.attendance
     if (isAttending) {
       // Mark as attended
       markAttendance(id, p.id, 'manual_checklist', user.id)
         .then(() => {
           addToast({ type: 'success', title: 'Berhasil', message: `${p.full_name} ditandai hadir.` })
+          fetchData() // re-sync state
         })
-        .catch(err => addToast({ type: 'error', title: 'Gagal', message: err.message }))
+        .catch(err => {
+          addToast({ type: 'error', title: 'Gagal', message: err.message })
+          fetchData() // re-sync state even on error
+        })
     } else {
       // Confirm unmark
       setConfirmDialog({
@@ -123,6 +151,7 @@ export function SessionDetailPage() {
           try {
             await unmarkAttendance(id, p.id, user.id)
             addToast({ type: 'success', title: 'Berhasil', message: `Kehadiran ${p.full_name} dibatalkan.` })
+            fetchData()
           } catch (err: any) {
             addToast({ type: 'error', title: 'Gagal', message: err.message })
           }
@@ -131,19 +160,55 @@ export function SessionDetailPage() {
     }
   }
 
+  const handleConfirmBatch = async () => {
+    if (!id || !user || pendingChanges.size === 0) return
+    
+    setIsSubmittingBatch(true)
+    try {
+      const toMark: string[] = []
+      const toUnmark: string[] = []
+      
+      pendingChanges.forEach((shouldAttend, participantId) => {
+        if (shouldAttend) {
+          toMark.push(participantId)
+        } else {
+          toUnmark.push(participantId)
+        }
+      })
+      
+      // Batch mark attendance
+      await batchMarkAttendance(id, toMark, toUnmark, user.id)
+      
+      const totalChanges = toMark.length + toUnmark.length
+      addToast({ 
+        type: 'success', 
+        title: 'Presensi Manual Berhasil', 
+        message: `${toMark.length} peserta ditandai hadir, ${toUnmark.length} dibatalkan. Total: ${totalChanges} perubahan.`
+      })
+      
+      setPendingChanges(new Map())
+      setIsManualMode(false)
+      fetchData()
+    } catch (error: any) {
+      addToast({ type: 'error', title: 'Gagal', message: error.message })
+    } finally {
+      setIsSubmittingBatch(false)
+    }
+  }
+
   const handleDeleteParticipant = (participant: ParticipantWithAttendance) => {
     setConfirmDialog({
       isOpen: true,
       title: 'Hapus Peserta',
-      message: p.attendance 
-        ? `Peringatan: "${p.full_name}" sudah melakukan presensi. Menghapusnya juga akan MENGHAPUS data kehadirannya di sesi ini. Lanjutkan?`
-        : `Apakah Anda yakin ingin menghapus "${p.full_name}" dari sesi ini?`,
+      message: participant.attendance 
+        ? `Peringatan: "${participant.full_name}" sudah melakukan presensi. Menghapusnya juga akan MENGHAPUS data kehadirannya di sesi ini. Lanjutkan?`
+        : `Apakah Anda yakin ingin menghapus "${participant.full_name}" dari sesi ini?`,
       variant: 'danger',
       action: async () => {
         try {
-          await deleteParticipant(p.id)
+          await deleteParticipant(participant.id)
           addToast({ type: 'success', title: 'Berhasil', message: 'Peserta berhasil dihapus.' })
-          
+          fetchData()
         } catch (error: any) {
           addToast({ type: 'error', title: 'Gagal', message: error.message })
         }
@@ -262,7 +327,7 @@ export function SessionDetailPage() {
                 <AnimatedNumber value={totalHadir} />
               </div>
             </div>
-            <div className="p-2 sm:p-3 bg-green-50 text-[var(--color-success)] rounded-full dark:bg-green-900/20">
+            <div className="p-2 sm:p-3 bg-[var(--color-success-soft)] text-[var(--color-success)] rounded-[var(--radius-md)]">
               <UserCheck size={20} strokeWidth={2} />
             </div>
           </div>
@@ -275,7 +340,7 @@ export function SessionDetailPage() {
                 <AnimatedNumber value={totalBelum} />
               </div>
             </div>
-            <div className="p-2 sm:p-3 bg-yellow-50 text-[var(--color-warning)] rounded-full dark:bg-yellow-900/20">
+            <div className="p-2 sm:p-3 bg-[var(--color-warning-soft)] text-[var(--color-warning)] rounded-[var(--radius-md)]">
               <UserMinus size={20} strokeWidth={2} />
             </div>
           </div>
@@ -317,6 +382,37 @@ export function SessionDetailPage() {
               { label: 'Download CSV', onClick: handleDownloadCSV },
             ]}
           />
+          
+          {isManualMode ? (
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setPendingChanges(new Map())
+                  setIsManualMode(false)
+                }}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="primary"
+                leftIcon={<Check size={18} />}
+                onClick={handleConfirmBatch}
+                isLoading={isSubmittingBatch}
+                disabled={pendingChanges.size === 0}
+              >
+                Konfirmasi ({pendingChanges.size})
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="secondary"
+              leftIcon={<Pencil size={18} />}
+              onClick={() => setIsManualMode(true)}
+            >
+              Presensi Manual
+            </Button>
+          )}
         </div>
         <DropdownMenu
           trigger={
@@ -333,6 +429,23 @@ export function SessionDetailPage() {
           ]}
         />
       </div>
+
+      {/* Banner Mode Manual */}
+      {isManualMode && (
+        <div className="bg-[var(--color-accent-soft)] border border-[var(--color-accent)]/30 rounded-[var(--radius-md)] p-4 flex items-center gap-3 text-sm mb-4">
+          <Pencil size={16} className="text-[var(--color-accent)] shrink-0" />
+          <div className="flex-1">
+            <span className="text-[var(--color-text-primary)]">
+              Mode presensi manual aktif. Centang peserta yang hadir, lalu tekan <strong>"Konfirmasi"</strong> untuk menyimpan.
+            </span>
+            {pendingChanges.size > 0 && (
+              <span className="ml-2 text-[var(--color-accent)] font-semibold">
+                ({pendingChanges.size} perubahan pending)
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Table Area */}
       <Card className="overflow-hidden">
@@ -382,15 +495,29 @@ export function SessionDetailPage() {
                     key={participant.id} 
                     className={`hover:bg-[var(--color-surface-hover)] transition-colors ${
                       highlightedRowId === participant.id ? 'realtime-highlight' : ''
-                    } ${participant.attendance ? 'bg-green-50/10 dark:bg-green-900/5' : ''}`}
+                    } ${participant.attendance ? 'bg-[var(--color-success-soft)]/50' : ''}`}
                   >
                     <td className="px-4 py-3 text-center">
-                      <input 
-                        type="checkbox" 
-                        checked={!!participant.attendance}
-                        onChange={() => handleToggleAttendance(participant)}
-                        className="w-4 h-4 rounded-[var(--radius-sm)] border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)] cursor-pointer"
-                      />
+                      {(() => {
+                        const isPending = pendingChanges.has(participant.id)
+                        const pendingValue = pendingChanges.get(participant.id)
+                        // Effective status: jika ada pending change, gunakan itu; kalau tidak, gunakan attendance
+                        const isChecked = isPending ? pendingValue : !!participant.attendance
+                        
+                        return (
+                          <input 
+                            type="checkbox" 
+                            checked={isChecked}
+                            onChange={() => handleToggleAttendance(participant)}
+                            disabled={!isManualMode}
+                            className={cn(
+                              "w-4 h-4 rounded-[var(--radius-sm)] border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]",
+                              !isManualMode ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+                              isPending && 'ring-2 ring-[var(--color-accent)]/30'  // highlight pending changes
+                            )}
+                          />
+                        )
+                      })()}
                     </td>
                     <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">
                       {participant.full_name}
@@ -400,7 +527,7 @@ export function SessionDetailPage() {
                     </td>
                     <td className="px-4 py-3">
                       {participant.attendance ? (
-                        <Badge variant="success" className="bg-green-100 text-green-700 border-green-200">Hadir</Badge>
+                        <Badge variant="success">Hadir</Badge>
                       ) : (
                         <Badge variant="default">-</Badge>
                       )}
