@@ -165,12 +165,12 @@ export function StudentModePage() {
   }
 
   return (
-    <div className="h-screen h-[100dvh] bg-[var(--color-bg)] flex flex-col relative overflow-hidden">
+    <div className="h-screen h-[100dvh] bg-[var(--color-bg)] flex flex-col items-center justify-center relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-[var(--color-accent-soft)] to-transparent pointer-events-none opacity-50" />
       
       {/* Header — compact */}
-      <header className="relative z-10 px-6 py-4 md:py-6 flex flex-col items-center justify-center text-center">
+      <header className="relative z-10 px-6 pb-6 flex flex-col items-center justify-center text-center">
         <h1 className="text-xl md:text-2xl font-bold font-[var(--font-display)] text-[var(--color-text-primary)] mb-1">
           {session.name}
         </h1>
@@ -178,7 +178,7 @@ export function StudentModePage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-md md:max-w-2xl mx-auto px-4 md:px-6 relative z-10 flex flex-col items-center justify-center pb-8">
+      <main className="w-full max-w-md md:max-w-2xl px-4 md:px-6 relative z-10 flex flex-col items-center justify-center">
         
         <AnimatePresence mode="wait">
           {!selectedParticipant && !isSuccessMode && (
@@ -380,7 +380,7 @@ export function StudentModePage() {
       </main>
 
       {/* Footer / Exit Button — clearly visible */}
-      <footer className="relative z-10 p-4 flex justify-center">
+      <footer className="relative z-10 pt-8 flex justify-center">
         <button
           onClick={() => { setShowExitDialog(true); setExitPassword(''); setExitPasswordError(''); setShowPassword(false) }}
           className="text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-danger)] bg-[var(--color-surface)] px-5 py-2.5 rounded-full border border-[var(--color-border)] shadow-sm hover:shadow transition-all flex items-center gap-2"
