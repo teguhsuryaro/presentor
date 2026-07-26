@@ -102,7 +102,7 @@ export function MainLayout() {
       <header className="lg:hidden flex items-center justify-between p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-30">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center overflow-hidden">
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+            <img src="/logo.webp" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-[var(--font-display)] font-semibold text-lg text-[var(--color-text-primary)]">Presentor</span>
         </div>
@@ -126,7 +126,7 @@ export function MainLayout() {
       )}>
         <div className="p-6 hidden lg:flex items-center gap-3">
           <div className="w-9 h-9 rounded-[var(--radius-md)] flex items-center justify-center overflow-hidden">
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+            <img src="/logo.webp" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="font-[var(--font-display)] font-bold text-xl text-[var(--color-text-primary)]">
             Presentor
