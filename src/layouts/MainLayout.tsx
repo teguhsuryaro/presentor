@@ -101,8 +101,8 @@ export function MainLayout() {
       {/* Mobile Header */}
       <header className="lg:hidden flex items-center justify-between p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-30">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[var(--color-accent)] rounded-[var(--radius-sm)] flex items-center justify-center">
-            <span className="text-white font-bold text-sm">P</span>
+          <div className="w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center overflow-hidden">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-[var(--font-display)] font-semibold text-lg text-[var(--color-text-primary)]">Presentor</span>
         </div>
@@ -125,8 +125,8 @@ export function MainLayout() {
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 hidden lg:flex items-center gap-3">
-          <div className="w-9 h-9 bg-[var(--color-accent)] rounded-[var(--radius-md)] flex items-center justify-center">
-            <span className="text-white font-bold text-lg">P</span>
+          <div className="w-9 h-9 rounded-[var(--radius-md)] flex items-center justify-center overflow-hidden">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="font-[var(--font-display)] font-bold text-xl text-[var(--color-text-primary)]">
             Presentor
@@ -199,6 +199,20 @@ export function MainLayout() {
             <LogOut size={16} />
             Keluar
           </button>
+          
+          <div className="mt-4 text-center">
+            <p className="text-[10px] text-[var(--color-text-secondary)]">
+              dibuat oleh{' '}
+              <a 
+                href="https://naotik-labs.vercel.app" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="font-semibold text-[var(--color-accent)] hover:underline"
+              >
+                Naotik Labs
+              </a>
+            </p>
+          </div>
         </div>
       </aside>
 

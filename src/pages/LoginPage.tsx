@@ -34,8 +34,8 @@ export function LoginPage() {
   return (
     <Card className="w-full p-8 shadow-[var(--shadow-card-hover)]">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] mb-4">
-          <User size={24} />
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] mb-4 overflow-hidden">
+          <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
         </div>
         <h1 className="text-2xl font-bold font-[var(--font-display)] text-[var(--color-text-primary)]">
           Sistem Presensi
