@@ -210,9 +210,11 @@ export function StudentModePage() {
       
       {/* Header — compact */}
       <header className="relative z-10 px-6 pb-6 flex flex-col items-center justify-center text-center">
-        <h1 className="text-xl md:text-2xl font-bold font-[var(--font-display)] text-[var(--color-text-primary)] mb-1">
-          {session.name}
-        </h1>
+        <div className="bg-[var(--color-accent)] px-4 py-2 rounded-lg shadow-sm mb-2">
+          <h1 className="text-xl md:text-2xl font-bold font-[var(--font-display)] text-white">
+            {session.name}
+          </h1>
+        </div>
         <p className="text-sm text-[var(--color-text-secondary)]">Presensi Peserta</p>
       </header>
 
@@ -326,26 +328,26 @@ export function StudentModePage() {
                     Anda sudah melakukan presensi sebelumnya.
                   </p>
                   
-                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-left mb-4">
+                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-5 text-left mb-4 shadow-sm">
                     {displayColumns.map((col, idx) => (
-                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-3" : "mb-3"}>
-                         <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">{col.label}</p>
+                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-4" : "mb-4"}>
+                         <p className="text-xs md:text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-1">{col.label}</p>
                          {idx === 2 && displayColumns.length >= 3 ? (
                            <span 
-                             className="inline-block px-2.5 py-0.5 text-sm font-bold rounded-md max-w-full truncate"
+                             className="inline-block px-3 py-1 text-base md:text-lg font-bold rounded-md max-w-full truncate"
                              title={getColumnValue(selectedParticipant, col.key)}
                              style={getThirdColumnStyle(getColumnValue(selectedParticipant, col.key))}
                            >
-                             {getColumnValue(selectedParticipant, col.key)}
+                             {getColumnValue(selectedParticipant, col.key) || '-'}
                            </span>
                          ) : (
-                           <p className={`${idx === 0 ? 'text-base font-bold' : 'text-sm font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
-                             {getColumnValue(selectedParticipant, col.key)}
+                           <p className={`${idx === 0 ? 'text-xl md:text-2xl font-bold' : 'text-base md:text-lg font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
+                             {getColumnValue(selectedParticipant, col.key) || '-'}
                            </p>
                          )}
                       </div>
                     ))}
-                    <div className="pt-3 border-t border-[var(--color-border)] flex items-center justify-between">
+                    <div className="pt-4 border-t border-[var(--color-border)] flex items-center justify-between">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--color-success-soft)] text-[var(--color-success)] text-xs font-semibold rounded-full border border-[var(--color-success)]/20">
                         Hadir
                       </span>
@@ -370,21 +372,21 @@ export function StudentModePage() {
                     {confirmDescription}
                   </p>
                   
-                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-left mb-4">
+                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-5 text-left mb-5 shadow-sm">
                     {displayColumns.map((col, idx) => (
-                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-3" : ""}>
-                         <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">{col.label}</p>
+                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-4" : ""}>
+                         <p className="text-xs md:text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-1">{col.label}</p>
                          {idx === 2 && displayColumns.length >= 3 ? (
                            <span 
-                             className="inline-block px-2.5 py-0.5 text-sm font-bold rounded-md max-w-full truncate"
+                             className="inline-block px-3 py-1 text-base md:text-lg font-bold rounded-md max-w-full truncate"
                              title={getColumnValue(selectedParticipant, col.key)}
                              style={getThirdColumnStyle(getColumnValue(selectedParticipant, col.key))}
                            >
-                             {getColumnValue(selectedParticipant, col.key)}
+                             {getColumnValue(selectedParticipant, col.key) || '-'}
                            </span>
                          ) : (
-                           <p className={`${idx === 0 ? 'text-base font-bold' : 'text-sm font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
-                             {getColumnValue(selectedParticipant, col.key)}
+                           <p className={`${idx === 0 ? 'text-xl md:text-2xl font-bold' : 'text-base md:text-lg font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
+                             {getColumnValue(selectedParticipant, col.key) || '-'}
                            </p>
                          )}
                       </div>

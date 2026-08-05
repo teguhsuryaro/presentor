@@ -8,7 +8,7 @@ export function AuroraEffect({ color }: AuroraEffectProps) {
   // Konversi hex ke rgba dengan opacity rendah
   const hexToRgba = (hex: string, alpha: number) => {
     // Basic hex parsing, assumes 7 chars e.g. #6D28D9
-    if (hex.length === 7) {
+    if (hex.startsWith('#') && hex.length === 7) {
       const r = parseInt(hex.slice(1, 3), 16)
       const g = parseInt(hex.slice(3, 5), 16)
       const b = parseInt(hex.slice(5, 7), 16)
