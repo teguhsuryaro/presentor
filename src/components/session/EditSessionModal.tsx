@@ -63,7 +63,7 @@ export function EditSessionModal({ isOpen, onClose, onSuccess, session }: EditSe
   const handleAddColumn = () => {
     if (columns.length >= 10 || !isColumnsEditable) return
     const newKey = generateColumnKey(`Kolom Baru`, columns.map(c => c.key))
-    setColumns([...columns, { key: newKey, label: '', required: false, _id: Math.random().toString() }])
+    setColumns([...columns, { key: newKey, label: '', required: true, _id: Math.random().toString() }])
   }
 
   const handleRemoveColumn = (index: number) => {

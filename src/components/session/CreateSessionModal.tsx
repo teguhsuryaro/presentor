@@ -81,7 +81,7 @@ export function CreateSessionModal({ isOpen, onClose, onSuccess }: CreateSession
   const handleAddColumn = () => {
     if (columns.length >= 10) return
     const newKey = generateColumnKey(`Kolom Baru`, columns.map(c => c.key))
-    setColumns([...columns, { key: newKey, label: '', required: false, _id: Math.random().toString() }])
+    setColumns([...columns, { key: newKey, label: '', required: true, _id: Math.random().toString() }])
   }
 
   const handleRemoveColumn = (index: number) => {
