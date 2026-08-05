@@ -167,7 +167,7 @@ export function StudentModePage() {
       
       setTimeout(() => {
         handleBackToSearch()
-      }, 4000)
+      }, 5000)
       
     } catch (e: any) {
       addToast({ type: 'error', title: 'Gagal', message: e.message })
@@ -234,14 +234,16 @@ export function StudentModePage() {
       </AnimatePresence>
       
       {/* Header — compact */}
-      <header className="relative z-10 px-6 pb-6 flex flex-col items-center justify-center text-center">
-        <div className="bg-[var(--color-accent)] px-4 py-2 rounded-lg shadow-sm mb-2">
-          <h1 className="text-xl md:text-2xl font-bold font-[var(--font-display)] text-white">
-            {session.name.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())}
-          </h1>
-        </div>
-        <p className="text-sm text-[var(--color-text-secondary)]">Presensi Peserta</p>
-      </header>
+      {!isSuccessMode && (
+        <header className="relative z-10 px-6 pb-6 flex flex-col items-center justify-center text-center">
+          <div className="bg-[var(--color-accent)] px-4 py-2 rounded-lg shadow-sm mb-2">
+            <h1 className="text-xl md:text-2xl font-bold font-[var(--font-display)] text-white">
+              {session.name.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())}
+            </h1>
+          </div>
+          <p className="text-sm text-[var(--color-text-secondary)]">Presensi Peserta</p>
+        </header>
+      )}
 
       {/* Main Content Area */}
       <main className="w-full max-w-md md:max-w-2xl px-4 md:px-6 relative z-10 flex flex-col items-center justify-center">
