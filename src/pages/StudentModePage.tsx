@@ -492,18 +492,25 @@ export function StudentModePage() {
                 )}
               </div>
               
-              <h2 className="text-2xl md:text-4xl font-bold text-[var(--color-text-primary)] mb-3 text-center drop-shadow-md px-4 leading-tight">
-                <span className="block text-lg md:text-2xl font-semibold text-[var(--color-text-secondary)] mb-2">Selamat Datang,</span>
-                {getColumnValue(selectedParticipant, displayColumns[0].key)}
-              </h2>
-              
-              {displayColumns.length >= 2 && (
-                <div className="bg-[var(--color-surface)]/80 backdrop-blur-md px-6 py-2 rounded-full border border-[var(--color-border)] shadow-sm">
-                  <p className="text-lg md:text-xl font-[var(--font-mono)] text-[var(--color-text-primary)] font-semibold text-center tracking-wide">
-                    {getColumnValue(selectedParticipant, displayColumns[1].key)}
-                  </p>
-                </div>
-              )}
+              <div className="flex flex-col items-center justify-center text-center mt-4 z-10">
+                <p className="text-sm md:text-base font-semibold text-[var(--color-text-secondary)] tracking-widest uppercase mb-1 opacity-80">
+                  Selamat Datang
+                </p>
+                <h2 
+                  className="text-4xl md:text-6xl font-black mb-6 drop-shadow-sm"
+                  style={displayColumns.length >= 3 ? { color: getThirdColumnStyle(getColumnValue(selectedParticipant, displayColumns[2].key)).color } : { color: 'var(--color-text-primary)' }}
+                >
+                  {getColumnValue(selectedParticipant, displayColumns[0].key)}
+                </h2>
+                
+                {displayColumns.length >= 2 && (
+                  <div className="px-6 py-2 bg-[var(--color-surface)]/50 backdrop-blur-md rounded-full border border-[var(--color-border)] shadow-sm">
+                    <p className="text-lg md:text-xl font-[var(--font-mono)] text-[var(--color-text-primary)] font-bold tracking-widest">
+                      {getColumnValue(selectedParticipant, displayColumns[1].key)}
+                    </p>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
