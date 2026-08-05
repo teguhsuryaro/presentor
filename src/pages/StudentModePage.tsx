@@ -112,11 +112,8 @@ export function StudentModePage() {
     : 'Ketik pencarian...'
 
   const confirmDescription = useMemo(() => {
-    const labels = displayColumns.map(c => c.label.toLowerCase())
-    return labels.length > 0 
-      ? `Pastikan ${labels.join(' dan ')} sesuai dengan identitas Anda.`
-      : 'Pastikan data sesuai dengan identitas Anda.'
-  }, [displayColumns])
+    return 'Pastikan data Anda sudah benar.'
+  }, [])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -150,11 +147,27 @@ export function StudentModePage() {
     setIsSubmitting(true)
     try {
       await markAttendance(id, selectedParticipant.id, 'self_service')
+      
+      // Optimistic UI update so badge appears instantly
+      const now = new Date().toISOString()
+      const newAttendanceRecord = {
+        id: 'temp-' + Date.now(),
+        session_id: id,
+        participant_id: selectedParticipant.id,
+        method: 'self_service',
+        recorded_by: null,
+        attended_at: now
+      }
+      
+      setAllParticipants(prev => prev.map(p => 
+        p.id === selectedParticipant.id ? { ...p, attendance: newAttendanceRecord as any } : p
+      ))
+      
       setIsSuccessMode(true)
       
       setTimeout(() => {
         handleBackToSearch()
-      }, 2000)
+      }, 4000)
       
     } catch (e: any) {
       addToast({ type: 'error', title: 'Gagal', message: e.message })
@@ -201,7 +214,24 @@ export function StudentModePage() {
   return (
     <div className="h-screen h-[100dvh] bg-[var(--color-bg)] flex flex-col items-center justify-center relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-[var(--color-accent-soft)] to-transparent pointer-events-none opacity-50" />
+      <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-[var(--color-accent-soft)] to-transparent pointer-events-none opacity-50 z-0" />
+      
+      {/* Aurora Effect for Success Mode Background */}
+      <AnimatePresence>
+        {isSuccessMode && displayColumns.length >= 3 && selectedParticipant && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            className="fixed inset-0 z-0 pointer-events-none"
+          >
+            <AuroraEffect color={getThirdColumnStyle(
+              getColumnValue(selectedParticipant, displayColumns[2].key)
+            ).color} />
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Header — compact */}
       <header className="relative z-10 px-6 pb-6 flex flex-col items-center justify-center text-center">
@@ -323,26 +353,26 @@ export function StudentModePage() {
                     Anda sudah melakukan presensi sebelumnya.
                   </p>
                   
-                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-5 text-left mb-4 shadow-sm">
+                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-left mb-4">
                     {displayColumns.map((col, idx) => (
-                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-4" : "mb-4"}>
-                         <p className="text-xs md:text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-1">{col.label}</p>
+                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-3" : "mb-3"}>
+                         <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">{col.label}</p>
                          {idx === 2 && displayColumns.length >= 3 ? (
                            <span 
-                             className="inline-block px-3 py-1 text-base md:text-lg font-bold rounded-md max-w-full truncate"
+                             className="inline-block px-2.5 py-0.5 text-sm font-bold rounded-md max-w-full truncate"
                              title={getColumnValue(selectedParticipant, col.key)}
                              style={getThirdColumnStyle(getColumnValue(selectedParticipant, col.key))}
                            >
                              {getColumnValue(selectedParticipant, col.key) || '-'}
                            </span>
                          ) : (
-                           <p className={`${idx === 0 ? 'text-xl md:text-2xl font-bold' : 'text-base md:text-lg font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
+                           <p className={`${idx === 0 ? 'text-base font-bold' : 'text-sm font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
                              {getColumnValue(selectedParticipant, col.key) || '-'}
                            </p>
                          )}
                       </div>
                     ))}
-                    <div className="pt-4 border-t border-[var(--color-border)] flex items-center justify-between">
+                    <div className="pt-3 border-t border-[var(--color-border)] flex items-center justify-between">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--color-success-soft)] text-[var(--color-success)] text-xs font-semibold rounded-full border border-[var(--color-success)]/20">
                         Hadir
                       </span>
@@ -367,20 +397,20 @@ export function StudentModePage() {
                     {confirmDescription}
                   </p>
                   
-                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-5 text-left mb-5 shadow-sm">
+                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-left mb-4">
                     {displayColumns.map((col, idx) => (
-                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-4" : ""}>
-                         <p className="text-xs md:text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-1">{col.label}</p>
+                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-3" : ""}>
+                         <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">{col.label}</p>
                          {idx === 2 && displayColumns.length >= 3 ? (
                            <span 
-                             className="inline-block px-3 py-1 text-base md:text-lg font-bold rounded-md max-w-full truncate"
+                             className="inline-block px-2.5 py-0.5 text-sm font-bold rounded-md max-w-full truncate"
                              title={getColumnValue(selectedParticipant, col.key)}
                              style={getThirdColumnStyle(getColumnValue(selectedParticipant, col.key))}
                            >
                              {getColumnValue(selectedParticipant, col.key) || '-'}
                            </span>
                          ) : (
-                           <p className={`${idx === 0 ? 'text-xl md:text-2xl font-bold' : 'text-base md:text-lg font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
+                           <p className={`${idx === 0 ? 'text-base font-bold' : 'text-sm font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
                              {getColumnValue(selectedParticipant, col.key) || '-'}
                            </p>
                          )}
@@ -419,13 +449,7 @@ export function StudentModePage() {
               transition={{ duration: 0.2 }}
               className="w-full flex flex-col items-center justify-center py-8 relative overflow-hidden"
             >
-              {displayColumns.length >= 3 && selectedParticipant && (
-                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                  <AuroraEffect color={getThirdColumnStyle(
-                    getColumnValue(selectedParticipant, displayColumns[2].key)
-                  ).color} />
-                </div>
-              )}
+              {/* (Aurora moved to background) */}
 
               <div className="relative mb-4 z-10">
                 <motion.div

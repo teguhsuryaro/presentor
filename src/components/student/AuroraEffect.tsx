@@ -19,27 +19,42 @@ export function AuroraEffect({ color }: AuroraEffectProps) {
   }
   
   return (
-    <>
+    <div className="absolute inset-0 overflow-hidden w-full h-full pointer-events-none">
+      {/* Top Left Blob */}
       <motion.div
-        className="absolute w-[300px] h-[300px] rounded-full blur-[80px]"
-        style={{ background: hexToRgba(color, 0.15), top: '10%', left: '10%', willChange: 'transform' }}
+        className="absolute w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full blur-[100px]"
+        style={{ background: hexToRgba(color, 0.25), top: '-10%', left: '-10%', willChange: 'transform' }}
         animate={{
-          x: ['-20%', '20%', '-10%'],
-          y: ['-10%', '15%', '-15%'],
-          scale: [1, 1.2, 1],
+          x: ['0%', '15%', '-5%', '0%'],
+          y: ['0%', '10%', '-10%', '0%'],
+          scale: [1, 1.1, 0.95, 1],
         }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
       />
+      
+      {/* Bottom Right Blob */}
       <motion.div
-        className="absolute right-0 bottom-0 w-[250px] h-[250px] rounded-full blur-[60px]"
-        style={{ background: hexToRgba(color, 0.1), willChange: 'transform' }}
+        className="absolute w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full blur-[90px]"
+        style={{ background: hexToRgba(color, 0.2), bottom: '-15%', right: '-5%', willChange: 'transform' }}
         animate={{
-          x: ['10%', '-15%', '10%'],
-          y: ['10%', '-20%', '10%'],
-          scale: [1, 1.15, 1],
+          x: ['0%', '-15%', '10%', '0%'],
+          y: ['0%', '-20%', '5%', '0%'],
+          scale: [1, 1.15, 0.9, 1],
         }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
       />
-    </>
+      
+      {/* Center Blob */}
+      <motion.div
+        className="absolute w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full blur-[120px]"
+        style={{ background: hexToRgba(color, 0.15), top: '20%', left: '30%', willChange: 'transform' }}
+        animate={{
+          x: ['0%', '10%', '-15%', '0%'],
+          y: ['0%', '-10%', '15%', '0%'],
+          scale: [1, 0.9, 1.1, 1],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </div>
   )
 }
