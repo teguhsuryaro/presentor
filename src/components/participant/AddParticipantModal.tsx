@@ -35,13 +35,13 @@ export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId, col
   const handleSubmit = async (e: React.FormEvent, closeAfterSubmit: boolean) => {
     e.preventDefault()
     
-    // Validasi required columns
-    const missingRequired = columns.filter(col => col.required && !formValues[col.key]?.trim())
+    // Validasi semua kolom wajib diisi
+    const missingRequired = columns.filter(col => !formValues[col.key]?.trim())
     if (missingRequired.length > 0) {
       addToast({
         type: 'error',
         title: 'Validasi Gagal',
-        message: `Kolom ${missingRequired.map(c => c.label).join(', ')} wajib diisi.`
+        message: `Semua kolom harus diisi. Kolom yang kosong: ${missingRequired.map(c => c.label).join(', ')}`
       })
       return
     }
@@ -84,7 +84,7 @@ export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId, col
             label={col.label}
             value={formValues[col.key] || ''}
             onChange={(e) => handleChange(col.key, e.target.value)}
-            required={col.required}
+            required={true}
             disabled={isSubmitting}
           />
         ))}
@@ -97,14 +97,14 @@ export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId, col
             variant="secondary" 
             type="button"
             onClick={(e) => handleSubmit(e as any, false)} 
-            disabled={isSubmitting || (columns.some(col => col.required && !formValues[col.key]?.trim()))}
+            disabled={isSubmitting || (columns.some(col => !formValues[col.key]?.trim()))}
           >
             Simpan & Tambah Lagi
           </Button>
           <Button 
             type="submit" 
             isLoading={isSubmitting} 
-            disabled={columns.some(col => col.required && !formValues[col.key]?.trim())}
+            disabled={columns.some(col => !formValues[col.key]?.trim())}
           >
             Simpan & Tutup
           </Button>

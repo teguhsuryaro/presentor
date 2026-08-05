@@ -55,13 +55,13 @@ export function ParticipantDetailModal({ isOpen, onClose, onSuccess, participant
     e.preventDefault()
     if (!participant || !hasChanges) return
 
-    // Validasi required columns
-    const missingRequired = columns.filter(col => col.required && !formValues[col.key]?.trim())
+    // Validasi semua kolom wajib diisi
+    const missingRequired = columns.filter(col => !formValues[col.key]?.trim())
     if (missingRequired.length > 0) {
       addToast({
         type: 'error',
         title: 'Validasi Gagal',
-        message: `Kolom ${missingRequired.map(c => c.label).join(', ')} wajib diisi.`
+        message: `Semua kolom harus diisi. Kolom yang kosong: ${missingRequired.map(c => c.label).join(', ')}`
       })
       return
     }
@@ -98,10 +98,10 @@ export function ParticipantDetailModal({ isOpen, onClose, onSuccess, participant
         {columns.map(col => (
           <div key={col.key} className="relative">
             <Input
-              label={`${col.label} ${col.required && isEditing ? '*' : ''}`}
+              label={col.label}
               value={formValues[col.key] || ''}
               onChange={(e) => handleChange(col.key, e.target.value)}
-              required={col.required && isEditing}
+              required={isEditing}
               disabled={!isEditing || isSubmitting}
               className={`transition-all duration-200 ${!isEditing ? 'pr-10 bg-[var(--color-surface-hover)] border-transparent cursor-default focus:ring-0 opacity-90 text-[var(--color-text-secondary)]' : 'pr-10 bg-[var(--color-surface)]'}`}
             />

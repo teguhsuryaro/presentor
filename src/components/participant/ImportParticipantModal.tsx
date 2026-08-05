@@ -98,8 +98,17 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId, 
   }
 
   const getValidRows = () => {
-    if (!parsedData || !mapping['full_name']) return []
-    return parsedData.rows.filter(row => row[mapping['full_name']])
+    if (!parsedData) return []
+    // Make sure all columns are mapped
+    if (columns.some(col => !mapping[col.key])) return []
+    
+    return parsedData.rows.filter(row => {
+      // Baris dianggap valid jika SEMUA kolom terisi
+      return columns.every(col => {
+        const header = mapping[col.key]
+        return header && row[header] !== undefined && String(row[header]).trim() !== ''
+      })
+    })
   }
 
   const handleImport = async () => {
@@ -184,8 +193,8 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId, 
       ...parsedData.headers.map(h => ({ value: h, label: h }))
     ]
 
-    const requiredColumns = columns.filter(c => c.required)
-    const optionalColumns = columns.filter(c => !c.required)
+    const requiredColumns = columns
+    const optionalColumns: SessionColumn[] = []
 
     return (
       <div className="space-y-6">
@@ -256,7 +265,7 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId, 
           <AlertTriangle className="text-[var(--color-warning)] shrink-0" size={20} />
           <div>
             <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Preview {previewData.length} baris pertama</h4>
-            <p className="text-xs text-[var(--color-text-secondary)] mt-1">Total ada {validRowsCount} baris valid yang akan diimpor. Baris tanpa Nama dilewati otomatis. NIM yang sudah ada di sistem akan otomatis dilewati.</p>
+            <p className="text-xs text-[var(--color-text-secondary)] mt-1">Total ada {validRowsCount} baris valid yang akan diimpor. Baris dengan data yang tidak lengkap akan dilewati otomatis. NIM yang sudah ada di sistem akan otomatis dilewati.</p>
           </div>
         </div>
 
