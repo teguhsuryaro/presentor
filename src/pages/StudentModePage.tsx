@@ -98,7 +98,16 @@ export function StudentModePage() {
     }
   }, [selectedParticipant, isSuccessMode])
 
-  const displayColumns = session?.custom_columns?.slice(0, 3) || []
+  const displayColumns = useMemo(() => {
+    let cols = session?.custom_columns || []
+    if (cols.length === 0) {
+      cols = [
+        { key: 'full_name', label: 'Nama', required: true },
+        { key: 'nim', label: 'NIM', required: true }
+      ]
+    }
+    return cols.slice(0, 3)
+  }, [session?.custom_columns])
 
   const searchPlaceholder = displayColumns.length > 0 
     ? `Ketik ${displayColumns.map(c => c.label).join(' atau ')}...`

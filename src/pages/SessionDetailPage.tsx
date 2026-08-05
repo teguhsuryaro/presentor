@@ -233,22 +233,33 @@ export function SessionDetailPage() {
     if (!session || !user) return
     try {
       addToast({ type: 'info', title: 'Memproses', message: 'Mempersiapkan CSV...' })
-      await generateCSV(session, participants, user.id, session.custom_columns || [])
+      await generateCSV(session, participants, user.id, effectiveColumns)
       addToast({ type: 'success', title: 'Berhasil', message: 'Laporan CSV berhasil diunduh.' })
     } catch (e: any) {
       addToast({ type: 'error', title: 'Gagal', message: 'Gagal mengunduh CSV: ' + e.message })
     }
   }
 
+  const effectiveColumns = useMemo(() => {
+    let cols = session?.custom_columns || []
+    if (cols.length === 0) {
+      cols = [
+        { key: 'full_name', label: 'Nama', required: true },
+        { key: 'nim', label: 'NIM', required: true }
+      ]
+    }
+    return cols
+  }, [session?.custom_columns])
+
   const visibleColumns = useMemo(() => {
-    if (!session?.custom_columns) return []
-    const cols = session.custom_columns
-    const result = [cols[0]] // Kolom pertama (Nama) selalu ada
-    if (cols.length > 1 && cols[visibleSecondColumnIndex]) {
-      result.push(cols[visibleSecondColumnIndex])
+    const result = [effectiveColumns[0]] // Kolom pertama (Nama) selalu ada
+    if (effectiveColumns.length > 1 && effectiveColumns[visibleSecondColumnIndex]) {
+      result.push(effectiveColumns[visibleSecondColumnIndex])
+    } else if (effectiveColumns.length > 1) {
+      result.push(effectiveColumns[1])
     }
     return result
-  }, [session?.custom_columns, visibleSecondColumnIndex])
+  }, [effectiveColumns, visibleSecondColumnIndex])
 
   const filteredParticipants = useMemo(() => {
     let result = participants
@@ -504,10 +515,10 @@ export function SessionDetailPage() {
                   <th key={col.key} className={`px-4 py-3 font-medium ${idx === 0 ? 'min-w-[180px]' : 'min-w-[140px]'}`}>
                     <div className="flex items-center gap-1">
                       {col.label}
-                      {idx === 1 && session.custom_columns && session.custom_columns.length > 2 && (
+                      {idx === 1 && effectiveColumns.length > 2 && (
                         <DropdownMenu
                           trigger={<button className="p-1 -m-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><ArrowUpDown size={14} /></button>}
-                          items={session.custom_columns.slice(1).map((c, i) => ({
+                          items={effectiveColumns.slice(1).map((c, i) => ({
                             label: c.label,
                             onClick: () => setVisibleSecondColumnIndex(i + 1),
                             icon: (i + 1) === visibleSecondColumnIndex ? <Check size={14} /> : undefined
@@ -600,7 +611,7 @@ export function SessionDetailPage() {
         onClose={() => setIsAddParticipantOpen(false)}
         onSuccess={fetchData}
         sessionId={id!}
-        columns={session.custom_columns || []}
+        columns={effectiveColumns}
       />
 
       <ImportParticipantModal 
@@ -608,7 +619,7 @@ export function SessionDetailPage() {
         onClose={() => setIsImportOpen(false)}
         onSuccess={fetchData}
         sessionId={id!}
-        columns={session.custom_columns || []}
+        columns={effectiveColumns}
       />
 
       <ParticipantDetailModal 
@@ -616,7 +627,7 @@ export function SessionDetailPage() {
         onClose={() => setIsEditParticipantOpen(false)}
         onSuccess={fetchData}
         participant={participantToEdit}
-        columns={session.custom_columns || []}
+        columns={effectiveColumns}
       />
 
       <ConfirmDialog
