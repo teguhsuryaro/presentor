@@ -1,7 +1,8 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import type { Session, ParticipantWithAttendance } from '../types'
+import type { Session, ParticipantWithAttendance, SessionColumn } from '../types'
 import { supabase } from '../lib/supabase'
+import { getColumnValue } from '../lib/columnUtils'
 
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('id-ID', {
@@ -22,7 +23,8 @@ function formatDateFile(date: Date): string {
 export async function generatePDF(
   session: Session,
   participants: ParticipantWithAttendance[],
-  userId: string
+  userId: string,
+  visibleColumns: SessionColumn[]
 ): Promise<void> {
   const doc = new jsPDF()
   const now = new Date()
@@ -106,16 +108,27 @@ export async function generatePDF(
   // ============================================
   // Tabel Peserta
   // ============================================
+  const pdfHeaders = [
+    'No',
+    ...visibleColumns.map(c => c.label),
+    'Status',
+    'Waktu Presensi'
+  ]
+
+  const pdfBody = participants.map((p, i) => [
+    i + 1,
+    ...visibleColumns.map(c => getColumnValue(p, c.key)),
+    p.attendance ? 'Hadir' : 'Belum Hadir',
+    p.attendance ? formatTime(p.attendance.attended_at) : '-'
+  ])
+
+  const statusColIdx = visibleColumns.length + 1
+  const timeColIdx = visibleColumns.length + 2
+
   autoTable(doc, {
     startY: yPos,
-    head: [['No', 'Nama Lengkap', 'NIM', 'Status', 'Waktu Presensi']],
-    body: participants.map((p, i) => [
-      i + 1,
-      p.full_name,
-      p.nim,
-      p.attendance ? 'Hadir' : 'Belum Hadir',
-      p.attendance ? formatTime(p.attendance.attended_at) : '-'
-    ]),
+    head: [pdfHeaders],
+    body: pdfBody,
     styles: { 
       fontSize: 9,
       cellPadding: 3
@@ -130,8 +143,8 @@ export async function generatePDF(
     },
     columnStyles: {
       0: { cellWidth: 12, halign: 'center' },
-      3: { halign: 'center' },
-      4: { halign: 'center' }
+      [statusColIdx]: { halign: 'center' },
+      [timeColIdx]: { halign: 'center' }
     }
   })
 
@@ -188,13 +201,18 @@ export async function generatePDF(
 export async function generateCSV(
   session: Session,
   participants: ParticipantWithAttendance[],
-  userId: string
+  userId: string,
+  allColumns: SessionColumn[]
 ): Promise<void> {
-  const headers = ['No', 'Nama', 'NIM', 'Status', 'Waktu Presensi']
+  const headers = [
+    'No',
+    ...allColumns.map(c => c.label),
+    'Status',
+    'Waktu Presensi'
+  ]
   const rows = participants.map((p, i) => [
     i + 1,
-    p.full_name,
-    p.nim,
+    ...allColumns.map(c => getColumnValue(p, c.key)),
     p.attendance ? 'Hadir' : 'Belum Hadir',
     p.attendance ? formatTime(p.attendance.attended_at) : '-'
   ])

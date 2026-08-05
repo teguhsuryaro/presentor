@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Users, UserCheck, UserMinus, TrendingUp, Search, Download, Plus, Play, MoreVertical, Check, Pencil } from 'lucide-react'
+import { ArrowLeft, Users, UserCheck, UserMinus, TrendingUp, Search, Download, Plus, Play, MoreVertical, Check, Pencil, ArrowUpDown } from 'lucide-react'
 
 import { getSessionById, openSession, closeSession } from '../services/session.service'
 import { getParticipantsWithAttendance, markAttendance, unmarkAttendance, batchMarkAttendance } from '../services/attendance.service'
@@ -10,9 +10,10 @@ import type { SessionWithStats, ParticipantWithAttendance } from '../types'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { cn } from '../lib/utils'
+import { getColumnValue } from '../lib/columnUtils'
 import { Card, Button, Badge, Skeleton, AnimatedNumber, Input, ConfirmDialog, DropdownMenu } from '../components/ui'
 import { AddParticipantModal } from '../components/participant/AddParticipantModal'
-import { EditParticipantModal } from '../components/participant/EditParticipantModal'
+import { ParticipantDetailModal } from '../components/participant/ParticipantDetailModal'
 import { ImportParticipantModal } from '../components/participant/ImportParticipantModal'
 import { useRealtimeAttendance } from '../hooks/useRealtimeAttendance'
 
@@ -28,6 +29,7 @@ export function SessionDetailPage() {
   
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'semua' | 'hadir' | 'belum'>('semua')
+  const [visibleSecondColumnIndex, setVisibleSecondColumnIndex] = useState(1)
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null)
   const [isManualMode, setIsManualMode] = useState(false)
   const [pendingChanges, setPendingChanges] = useState<Map<string, boolean>>(new Map())
@@ -220,7 +222,7 @@ export function SessionDetailPage() {
     if (!session || !user) return
     try {
       addToast({ type: 'info', title: 'Memproses', message: 'Mempersiapkan PDF...' })
-      await generatePDF(session, participants, user.id)
+      await generatePDF(session, participants, user.id, visibleColumns)
       addToast({ type: 'success', title: 'Berhasil', message: 'Laporan PDF berhasil diunduh.' })
     } catch (e: any) {
       addToast({ type: 'error', title: 'Gagal', message: 'Gagal mengunduh PDF: ' + e.message })
@@ -231,12 +233,22 @@ export function SessionDetailPage() {
     if (!session || !user) return
     try {
       addToast({ type: 'info', title: 'Memproses', message: 'Mempersiapkan CSV...' })
-      await generateCSV(session, participants, user.id)
+      await generateCSV(session, participants, user.id, session.custom_columns || [])
       addToast({ type: 'success', title: 'Berhasil', message: 'Laporan CSV berhasil diunduh.' })
     } catch (e: any) {
       addToast({ type: 'error', title: 'Gagal', message: 'Gagal mengunduh CSV: ' + e.message })
     }
   }
+
+  const visibleColumns = useMemo(() => {
+    if (!session?.custom_columns) return []
+    const cols = session.custom_columns
+    const result = [cols[0]] // Kolom pertama (Nama) selalu ada
+    if (cols.length > 1 && cols[visibleSecondColumnIndex]) {
+      result.push(cols[visibleSecondColumnIndex])
+    }
+    return result
+  }, [session?.custom_columns, visibleSecondColumnIndex])
 
   const filteredParticipants = useMemo(() => {
     let result = participants
@@ -252,13 +264,20 @@ export function SessionDetailPage() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       result = result.filter(p => 
-        p.full_name.toLowerCase().includes(query) || 
-        p.nim.toLowerCase().includes(query)
+        visibleColumns.some(col => 
+          getColumnValue(p, col.key).toLowerCase().includes(query)
+        )
       )
     }
 
     return result
-  }, [participants, activeTab, searchQuery])
+  }, [participants, activeTab, searchQuery, visibleColumns])
+
+  const searchPlaceholder = useMemo(() => {
+    if (visibleColumns.length === 0) return 'Cari peserta...'
+    const labels = visibleColumns.map(c => c.label)
+    return `Cari ${labels.join(' atau ')}...`
+  }, [visibleColumns])
 
   if (isLoading || !session) {
     return (
@@ -467,7 +486,7 @@ export function SessionDetailPage() {
           </div>
           <div className="w-full sm:w-64">
             <Input
-              placeholder="Cari nama atau NIM..."
+              placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               leftIcon={<Search size={16} />}
@@ -481,8 +500,23 @@ export function SessionDetailPage() {
             <thead className="bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border-b border-[var(--color-border)]">
               <tr>
                 <th className="w-12 px-4 py-3 text-center">☑</th>
-                <th className="px-4 py-3 font-medium">Nama Peserta</th>
-                <th className="px-4 py-3 font-medium">NIM</th>
+                {visibleColumns.map((col, idx) => (
+                  <th key={col.key} className={`px-4 py-3 font-medium ${idx === 0 ? 'min-w-[180px]' : 'min-w-[140px]'}`}>
+                    <div className="flex items-center gap-1">
+                      {col.label}
+                      {idx === 1 && session.custom_columns && session.custom_columns.length > 2 && (
+                        <DropdownMenu
+                          trigger={<button className="p-1 -m-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><ArrowUpDown size={14} /></button>}
+                          items={session.custom_columns.slice(1).map((c, i) => ({
+                            label: c.label,
+                            onClick: () => setVisibleSecondColumnIndex(i + 1),
+                            icon: (i + 1) === visibleSecondColumnIndex ? <Check size={14} /> : undefined
+                          }))}
+                        />
+                      )}
+                    </div>
+                  </th>
+                ))}
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Waktu Presensi</th>
                 <th className="w-12 px-4 py-3 text-center">Aksi</th>
@@ -519,12 +553,11 @@ export function SessionDetailPage() {
                         )
                       })()}
                     </td>
-                    <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">
-                      {participant.full_name}
-                    </td>
-                    <td className="px-4 py-3 font-[var(--font-mono)] text-[var(--color-text-secondary)]">
-                      {participant.nim}
-                    </td>
+                    {visibleColumns.map(col => (
+                      <td key={col.key} className={`px-4 py-3 ${col.key === 'full_name' ? 'font-medium text-[var(--color-text-primary)]' : col.key === 'nim' ? 'font-[var(--font-mono)] text-[var(--color-text-secondary)]' : 'text-[var(--color-text-secondary)]'}`}>
+                        {getColumnValue(participant, col.key) || '-'}
+                      </td>
+                    ))}
                     <td className="px-4 py-3">
                       {participant.attendance ? (
                         <Badge variant="success">Hadir</Badge>
@@ -543,7 +576,7 @@ export function SessionDetailPage() {
                           </button>
                         }
                         items={[
-                          { label: 'Edit Peserta', onClick: () => { setParticipantToEdit(participant); setIsEditParticipantOpen(true); } },
+                          { label: 'Detail Peserta', onClick: () => { setParticipantToEdit(participant); setIsEditParticipantOpen(true); } },
                           { label: 'Hapus Peserta', variant: 'danger', onClick: () => handleDeleteParticipant(participant) }
                         ]}
                       />
@@ -567,6 +600,7 @@ export function SessionDetailPage() {
         onClose={() => setIsAddParticipantOpen(false)}
         onSuccess={fetchData}
         sessionId={id!}
+        columns={session.custom_columns || []}
       />
 
       <ImportParticipantModal 
@@ -574,13 +608,15 @@ export function SessionDetailPage() {
         onClose={() => setIsImportOpen(false)}
         onSuccess={fetchData}
         sessionId={id!}
+        columns={session.custom_columns || []}
       />
 
-      <EditParticipantModal 
+      <ParticipantDetailModal 
         isOpen={isEditParticipantOpen}
         onClose={() => setIsEditParticipantOpen(false)}
         onSuccess={fetchData}
         participant={participantToEdit}
+        columns={session.custom_columns || []}
       />
 
       <ConfirmDialog

@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { SessionWithStats } from '../types'
+import type { SessionWithStats, SessionColumn } from '../types'
 
 export interface SessionFilters {
   event_id?: string
@@ -116,7 +116,7 @@ export async function createEvent(data: { name: string, academic_year?: string }
 // Session CRUD
 // ============================================
 
-export async function createSession(data: { name: string, description?: string, event_id?: string }, userId: string): Promise<any> {
+export async function createSession(data: { name: string, description?: string, event_id?: string, custom_columns: SessionColumn[] }, userId: string): Promise<any> {
   const { data: newSession, error } = await supabase
     .from('sessions')
     .insert({
@@ -124,6 +124,7 @@ export async function createSession(data: { name: string, description?: string, 
       description: data.description || null,
       event_id: data.event_id || null,
       status: 'aktif',
+      custom_columns: data.custom_columns,
       created_by: userId
     })
     .select()
@@ -141,15 +142,21 @@ export async function createSession(data: { name: string, description?: string, 
   return newSession
 }
 
-export async function updateSession(id: string, data: { name: string, description?: string, event_id?: string }, userId: string): Promise<any> {
+export async function updateSession(id: string, data: { name: string, description?: string, event_id?: string, custom_columns?: SessionColumn[] }, userId: string): Promise<any> {
+  const updatePayload: any = {
+    name: data.name,
+    description: data.description || null,
+    event_id: data.event_id || null,
+    updated_at: new Date().toISOString()
+  }
+
+  if (data.custom_columns) {
+    updatePayload.custom_columns = data.custom_columns
+  }
+
   const { data: updatedSession, error } = await supabase
     .from('sessions')
-    .update({
-      name: data.name,
-      description: data.description || null,
-      event_id: data.event_id || null,
-      updated_at: new Date().toISOString()
-    })
+    .update(updatePayload)
     .eq('id', id)
     .select()
     .single()

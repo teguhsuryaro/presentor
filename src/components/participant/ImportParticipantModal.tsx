@@ -6,23 +6,23 @@ import { importParticipantsBatch } from '../../services/participant.service'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { FileUp, FileText, FileSpreadsheet, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react'
+import type { SessionColumn } from '../../types'
 
 interface ImportParticipantModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
   sessionId: string
+  columns: SessionColumn[]
 }
 
 type Step = 'upload' | 'mapping' | 'preview'
 
-export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }: ImportParticipantModalProps) {
+export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId, columns }: ImportParticipantModalProps) {
   const [step, setStep] = useState<Step>('upload')
   const [file, setFile] = useState<File | null>(null)
   const [parsedData, setParsedData] = useState<ParsedFile | null>(null)
-  const [mapping, setMapping] = useState<{nameColumn: string, nimColumn: string, additionalColumns: Record<string, string>}>({
-    nameColumn: '', nimColumn: '', additionalColumns: { prodi: '', fakultas: '', kelompok: '', angkatan: '', kelas: '' }
-  })
+  const [mapping, setMapping] = useState<Record<string, string>>({})
   const [isProcessing, setIsProcessing] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -33,7 +33,7 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
     setStep('upload')
     setFile(null)
     setParsedData(null)
-    setMapping({ nameColumn: '', nimColumn: '', additionalColumns: { prodi: '', fakultas: '', kelompok: '', angkatan: '', kelas: '' } })
+    setMapping({})
   }
 
   const handleClose = () => {
@@ -59,12 +59,18 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
       }
 
       setParsedData(data)
+      
+      // Auto-detect mapping
+      const newMapping: Record<string, string> = {}
       const detected = detectColumnMapping(data.headers)
-      setMapping(prev => ({
-        ...prev,
-        nameColumn: detected.nameColumn,
-        nimColumn: detected.nimColumn
-      }))
+      
+      columns.forEach(col => {
+        if (col.key === 'full_name') newMapping[col.key] = detected.nameColumn
+        else if (col.key === 'nim') newMapping[col.key] = detected.nimColumn
+        else newMapping[col.key] = ''
+      })
+      
+      setMapping(newMapping)
       setStep('mapping')
     } catch (error: any) {
       addToast({ type: 'error', title: 'Gagal Membaca File', message: error.message })
@@ -74,37 +80,26 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
     }
   }
 
-  const handleMappingChange = (type: 'name' | 'nim' | 'prodi' | 'fakultas' | 'kelompok' | 'angkatan' | 'kelas', value: string) => {
-    if (type === 'name') {
-      setMapping(prev => ({ ...prev, nameColumn: value }))
-    } else if (type === 'nim') {
-      setMapping(prev => ({ ...prev, nimColumn: value }))
-    } else {
-      setMapping(prev => ({ ...prev, additionalColumns: { ...prev.additionalColumns, [type]: value } }))
-    }
+  const handleMappingChange = (colKey: string, headerValue: string) => {
+    setMapping(prev => ({ ...prev, [colKey]: headerValue }))
   }
 
   const generatePreview = () => {
-    if (!parsedData || !mapping.nameColumn || !mapping.nimColumn) return []
+    if (!parsedData || !mapping['full_name']) return []
     
     return parsedData.rows.slice(0, 10).map(row => {
-      const attrs: Record<string, string> = {}
-      Object.entries(mapping.additionalColumns).forEach(([key, colName]) => {
-        if (colName && row[colName] !== undefined) {
-          attrs[key] = String(row[colName])
-        }
+      const participant: Record<string, string> = {}
+      columns.forEach(col => {
+        const header = mapping[col.key]
+        participant[col.key] = header && row[header] !== undefined ? String(row[header]) : ''
       })
-      return {
-        full_name: String(row[mapping.nameColumn] || ''),
-        nim: String(row[mapping.nimColumn] || ''),
-        ...attrs
-      }
+      return participant
     })
   }
 
   const getValidRows = () => {
-    if (!parsedData || !mapping.nameColumn || !mapping.nimColumn) return []
-    return parsedData.rows.filter(row => row[mapping.nameColumn] && row[mapping.nimColumn])
+    if (!parsedData || !mapping['full_name']) return []
+    return parsedData.rows.filter(row => row[mapping['full_name']])
   }
 
   const handleImport = async () => {
@@ -120,16 +115,19 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
     try {
       const participantsToImport = validRows.map(row => {
         const attrs: Record<string, string> = {}
-        Object.entries(mapping.additionalColumns).forEach(([key, colName]) => {
-          if (colName && row[colName] !== undefined) {
-            attrs[key] = String(row[colName])
-          }
+        let full_name = ''
+        let nim = ''
+
+        columns.forEach(col => {
+          const header = mapping[col.key]
+          const val = header && row[header] !== undefined ? String(row[header]) : ''
+          
+          if (col.key === 'full_name') full_name = val
+          else if (col.key === 'nim') nim = val
+          else attrs[col.key] = val
         })
-        return {
-          full_name: String(row[mapping.nameColumn]),
-          nim: String(row[mapping.nimColumn]),
-          attributes: attrs
-        }
+
+        return { full_name, nim, attributes: attrs }
       })
 
       const result = await importParticipantsBatch(sessionId, participantsToImport, user.id, file?.name || 'unknown')
@@ -186,6 +184,9 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
       ...parsedData.headers.map(h => ({ value: h, label: h }))
     ]
 
+    const requiredColumns = columns.filter(c => c.required)
+    const optionalColumns = columns.filter(c => !c.required)
+
     return (
       <div className="space-y-6">
         <div className="p-4 bg-[var(--color-surface-hover)] rounded-[var(--radius-md)] border border-[var(--color-border)] flex items-center justify-between">
@@ -202,40 +203,41 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
         <div className="space-y-4">
           <h4 className="font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">Kolom Wajib</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select 
-              label="Kolom Nama Lengkap *" 
-              value={mapping.nameColumn} 
-              onChange={val => handleMappingChange('name', val)} 
-              options={headerOptions} 
-            />
-            <Select 
-              label="Kolom NIM *" 
-              value={mapping.nimColumn} 
-              onChange={val => handleMappingChange('nim', val)} 
-              options={headerOptions} 
-            />
+            {requiredColumns.map(col => (
+              <Select 
+                key={col.key}
+                label={`Kolom ${col.label} *`}
+                value={mapping[col.key] || ''} 
+                onChange={val => handleMappingChange(col.key, val)} 
+                options={headerOptions} 
+              />
+            ))}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h4 className="font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">Kolom Opsional (Data Tambahan)</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select label="Prodi" value={mapping.additionalColumns.prodi} onChange={val => handleMappingChange('prodi', val)} options={headerOptions} />
-            <Select label="Fakultas" value={mapping.additionalColumns.fakultas} onChange={val => handleMappingChange('fakultas', val)} options={headerOptions} />
-            <Select label="Kelompok" value={mapping.additionalColumns.kelompok} onChange={val => handleMappingChange('kelompok', val)} options={headerOptions} />
-            <Select label="Angkatan" value={mapping.additionalColumns.angkatan} onChange={val => handleMappingChange('angkatan', val)} options={headerOptions} />
-            <div className="sm:col-span-2">
-              <Select label="Kelas" value={mapping.additionalColumns.kelas} onChange={val => handleMappingChange('kelas', val)} options={headerOptions} />
+        {optionalColumns.length > 0 && (
+          <div className="space-y-4">
+            <h4 className="font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">Kolom Opsional (Data Tambahan)</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {optionalColumns.map(col => (
+                <Select 
+                  key={col.key}
+                  label={`Kolom ${col.label}`}
+                  value={mapping[col.key] || ''} 
+                  onChange={val => handleMappingChange(col.key, val)} 
+                  options={headerOptions} 
+                />
+              ))}
             </div>
           </div>
-        </div>
+        )}
 
         <div className="flex justify-between pt-4 border-t border-[var(--color-border)]">
           <Button variant="ghost" onClick={handleClose}>Batal</Button>
           <Button 
             rightIcon={<ArrowRight size={18} />} 
             onClick={() => setStep('preview')}
-            disabled={!mapping.nameColumn || !mapping.nimColumn}
+            disabled={requiredColumns.some(col => !mapping[col.key])}
           >
             Lanjut ke Preview
           </Button>
@@ -254,7 +256,7 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
           <AlertTriangle className="text-[var(--color-warning)] shrink-0" size={20} />
           <div>
             <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Preview {previewData.length} baris pertama</h4>
-            <p className="text-xs text-[var(--color-text-secondary)] mt-1">Total ada {validRowsCount} baris valid yang akan diimpor. Baris tanpa Nama atau NIM dilewati otomatis. NIM yang sudah ada di sistem akan otomatis dilewati.</p>
+            <p className="text-xs text-[var(--color-text-secondary)] mt-1">Total ada {validRowsCount} baris valid yang akan diimpor. Baris tanpa Nama dilewati otomatis. NIM yang sudah ada di sistem akan otomatis dilewati.</p>
           </div>
         </div>
 
@@ -262,19 +264,27 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId }
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]">
               <tr>
-                <th className="px-4 py-2 font-medium">Nama Lengkap</th>
-                <th className="px-4 py-2 font-medium">NIM</th>
-                {mapping.additionalColumns.prodi && <th className="px-4 py-2 font-medium">Prodi</th>}
-                {mapping.additionalColumns.kelompok && <th className="px-4 py-2 font-medium">Kelompok</th>}
+                {columns.map(col => {
+                  if (mapping[col.key]) {
+                    return <th key={col.key} className="px-4 py-2 font-medium">{col.label}</th>
+                  }
+                  return null
+                })}
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-border)]">
               {previewData.map((row, idx) => (
                 <tr key={idx} className="hover:bg-[var(--color-surface-hover)]">
-                  <td className="px-4 py-2 font-medium">{row.full_name || '-'}</td>
-                  <td className="px-4 py-2 font-[var(--font-mono)] text-[var(--color-text-secondary)]">{row.nim || '-'}</td>
-                  {mapping.additionalColumns.prodi && <td className="px-4 py-2 text-[var(--color-text-secondary)]">{row.prodi || '-'}</td>}
-                  {mapping.additionalColumns.kelompok && <td className="px-4 py-2 text-[var(--color-text-secondary)]">{row.kelompok || '-'}</td>}
+                  {columns.map(col => {
+                    if (mapping[col.key]) {
+                      return (
+                        <td key={col.key} className={`px-4 py-2 ${col.key === 'full_name' ? 'font-medium' : col.key === 'nim' ? 'font-[var(--font-mono)] text-[var(--color-text-secondary)]' : 'text-[var(--color-text-secondary)]'}`}>
+                          {row[col.key] || '-'}
+                        </td>
+                      )
+                    }
+                    return null
+                  })}
                 </tr>
               ))}
             </tbody>

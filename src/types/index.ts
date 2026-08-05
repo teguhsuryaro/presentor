@@ -36,12 +36,19 @@ export interface Event {
 
 export type SessionStatus = 'aktif' | 'ditutup'
 
+export interface SessionColumn {
+  key: string
+  label: string
+  required: boolean
+}
+
 export interface Session {
   id: string
   event_id: string | null
   name: string
   description: string | null
   status: SessionStatus
+  custom_columns: SessionColumn[]
   created_by: string
   created_at: string
   updated_at: string

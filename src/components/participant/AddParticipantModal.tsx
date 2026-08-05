@@ -1,39 +1,26 @@
 import { useState } from 'react'
 import { Modal, Input, Button } from '../ui'
 import { addParticipant } from '../../services/participant.service'
+import { buildParticipantData } from '../../lib/columnUtils'
 import { useToast } from '../../context/ToastContext'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import type { SessionColumn } from '../../types'
 
 interface AddParticipantModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
   sessionId: string
+  columns: SessionColumn[]
 }
 
-export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId }: AddParticipantModalProps) {
-  const [fullName, setFullName] = useState('')
-  const [nim, setNim] = useState('')
-  const [prodi, setProdi] = useState('')
-  const [fakultas, setFakultas] = useState('')
-  const [kelompok, setKelompok] = useState('')
-  const [angkatan, setAngkatan] = useState('')
-  const [kelas, setKelas] = useState('')
-  
-  const [showAdditional, setShowAdditional] = useState(false)
+export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId, columns }: AddParticipantModalProps) {
+  const [formValues, setFormValues] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const { addToast } = useToast()
 
   const resetForm = () => {
-    setFullName('')
-    setNim('')
-    setProdi('')
-    setFakultas('')
-    setKelompok('')
-    setAngkatan('')
-    setKelas('')
-    setShowAdditional(false)
+    setFormValues({})
   }
 
   const handleClose = () => {
@@ -41,17 +28,28 @@ export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId }: A
     onClose()
   }
 
+  const handleChange = (key: string, value: string) => {
+    setFormValues(prev => ({ ...prev, [key]: value }))
+  }
+
   const handleSubmit = async (e: React.FormEvent, closeAfterSubmit: boolean) => {
     e.preventDefault()
-    if (!fullName.trim() || !nim.trim()) return
+    
+    // Validasi required columns
+    const missingRequired = columns.filter(col => col.required && !formValues[col.key]?.trim())
+    if (missingRequired.length > 0) {
+      addToast({
+        type: 'error',
+        title: 'Validasi Gagal',
+        message: `Kolom ${missingRequired.map(c => c.label).join(', ')} wajib diisi.`
+      })
+      return
+    }
 
     setIsSubmitting(true)
     try {
-      await addParticipant(sessionId, {
-        full_name: fullName,
-        nim: nim,
-        attributes: { prodi, fakultas, kelompok, angkatan, kelas }
-      })
+      const { full_name, nim, attributes } = buildParticipantData(columns, formValues)
+      await addParticipant(sessionId, { full_name, nim, attributes })
 
       addToast({
         type: 'success',
@@ -80,44 +78,16 @@ export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId }: A
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Tambah Peserta Manual">
       <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4 pt-2">
-        <Input
-          label="Nama Lengkap *"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          required
-          disabled={isSubmitting}
-        />
-        
-        <Input
-          label="NIM *"
-          value={nim}
-          onChange={(e) => setNim(e.target.value)}
-          required
-          disabled={isSubmitting}
-        />
-
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => setShowAdditional(!showAdditional)}
-            className="flex items-center text-sm font-medium text-[var(--color-accent)] hover:underline"
-          >
-            {showAdditional ? <ChevronUp size={16} className="mr-1" /> : <ChevronDown size={16} className="mr-1" />}
-            Data Tambahan (Opsional)
-          </button>
-          
-          {showAdditional && (
-            <div className="grid grid-cols-2 gap-4 mt-4 p-4 border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface-hover)]">
-              <Input label="Prodi" value={prodi} onChange={(e) => setProdi(e.target.value)} disabled={isSubmitting} />
-              <Input label="Fakultas" value={fakultas} onChange={(e) => setFakultas(e.target.value)} disabled={isSubmitting} />
-              <Input label="Kelompok" value={kelompok} onChange={(e) => setKelompok(e.target.value)} disabled={isSubmitting} />
-              <Input label="Angkatan" value={angkatan} onChange={(e) => setAngkatan(e.target.value)} disabled={isSubmitting} />
-              <div className="col-span-2">
-                <Input label="Kelas" value={kelas} onChange={(e) => setKelas(e.target.value)} disabled={isSubmitting} />
-              </div>
-            </div>
-          )}
-        </div>
+        {columns.map(col => (
+          <Input
+            key={col.key}
+            label={`${col.label} ${col.required ? '*' : ''}`}
+            value={formValues[col.key] || ''}
+            onChange={(e) => handleChange(col.key, e.target.value)}
+            required={col.required}
+            disabled={isSubmitting}
+          />
+        ))}
 
         <div className="flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
           <Button variant="ghost" onClick={handleClose} disabled={isSubmitting} type="button">
@@ -127,11 +97,15 @@ export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId }: A
             variant="secondary" 
             type="button"
             onClick={(e) => handleSubmit(e as any, false)} 
-            disabled={isSubmitting || !fullName.trim() || !nim.trim()}
+            disabled={isSubmitting || (columns.some(col => col.required && !formValues[col.key]?.trim()))}
           >
             Simpan & Tambah Lagi
           </Button>
-          <Button type="submit" isLoading={isSubmitting} disabled={!fullName.trim() || !nim.trim()}>
+          <Button 
+            type="submit" 
+            isLoading={isSubmitting} 
+            disabled={columns.some(col => col.required && !formValues[col.key]?.trim())}
+          >
             Simpan & Tutup
           </Button>
         </div>

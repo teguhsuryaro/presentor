@@ -6,11 +6,13 @@ import { Search, ArrowLeft, CheckCircle2, Clock, Lock, Eye, EyeOff } from 'lucid
 import { getSessionById } from '../services/session.service'
 import { searchParticipants } from '../services/participant.service'
 import { markAttendance, getParticipantsWithAttendance } from '../services/attendance.service'
-import type { SessionWithStats, ParticipantWithAttendance } from '../types'
+import type { SessionWithStats, ParticipantWithAttendance, SessionColumn } from '../types'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import { useRealtimeAttendance } from '../hooks/useRealtimeAttendance'
 import { supabase } from '../lib/supabase'
+import { getColumnValue, getThirdColumnStyle } from '../lib/columnUtils'
+import { AuroraEffect } from '../components/student/AuroraEffect'
 
 const INTERNAL_DOMAIN = '@internal.presensi.local'
 
@@ -58,6 +60,20 @@ export function StudentModePage() {
   useEffect(() => {
     if (!id) return
     fetchSessionAndParticipants()
+
+    // Trap back button using pushState
+    const handlePopState = () => {
+      // Prevent back navigation by pushing current state back
+      window.history.pushState(null, '', window.location.href)
+    }
+
+    // Push initial state to create history entry
+    window.history.pushState(null, '', window.location.href)
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
   }, [id])
 
   useRealtimeAttendance({
@@ -82,6 +98,19 @@ export function StudentModePage() {
     }
   }, [selectedParticipant, isSuccessMode])
 
+  const displayColumns = session?.custom_columns?.slice(0, 3) || []
+
+  const searchPlaceholder = displayColumns.length > 0 
+    ? `Ketik ${displayColumns.map(c => c.label).join(' atau ')}...`
+    : 'Ketik pencarian...'
+
+  const confirmDescription = useMemo(() => {
+    const labels = displayColumns.map(c => c.label.toLowerCase())
+    return labels.length > 0 
+      ? `Pastikan ${labels.join(' dan ')} sesuai dengan identitas Anda.`
+      : 'Pastikan data sesuai dengan identitas Anda.'
+  }, [displayColumns])
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (!searchQuery.trim()) {
@@ -94,8 +123,9 @@ export function StudentModePage() {
       const query = searchQuery.toLowerCase().trim()
       
       const results = allParticipants.filter(p => 
-        p.full_name.toLowerCase().includes(query) || 
-        p.nim.toLowerCase().includes(query)
+        displayColumns.some(col => 
+          getColumnValue(p, col.key).toLowerCase().includes(query)
+        )
       ).slice(0, 5)
       
       setSearchResults(results)
@@ -198,7 +228,7 @@ export function StudentModePage() {
                   ref={searchInputRef}
                   type="text"
                   className="block w-full pl-12 pr-4 py-4 text-lg bg-[var(--color-surface)] border-2 border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-0 focus:border-[var(--color-accent)] shadow-sm transition-all"
-                  placeholder="Ketik Nama atau NIM..."
+                  placeholder={searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoComplete="off"
@@ -217,12 +247,27 @@ export function StudentModePage() {
                         onClick={() => handleSelectParticipant(p)}
                       >
                         <div>
-                          <h3 className="text-base font-bold text-[var(--color-text-primary)]">
-                            {p.full_name}
-                          </h3>
-                          <p className="text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)] mt-0.5">
-                            {p.nim}
-                          </p>
+                          {displayColumns.length > 0 && (
+                            <h3 className="text-base font-bold text-[var(--color-text-primary)]">
+                              {getColumnValue(p, displayColumns[0].key)}
+                            </h3>
+                          )}
+                          
+                          {displayColumns.length >= 2 && (
+                            <p className="text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)] mt-0.5">
+                              {getColumnValue(p, displayColumns[1].key)}
+                            </p>
+                          )}
+                          
+                          {displayColumns.length >= 3 && (
+                            <span 
+                              className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full max-w-[150px] truncate align-middle"
+                              title={getColumnValue(p, displayColumns[2].key)}
+                              style={getThirdColumnStyle(getColumnValue(p, displayColumns[2].key))}
+                            >
+                              {getColumnValue(p, displayColumns[2].key)}
+                            </span>
+                          )}
                         </div>
                         
                         {p.attendance ? (
@@ -273,14 +318,24 @@ export function StudentModePage() {
                   </p>
                   
                   <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-left mb-4">
-                    <div className="mb-3">
-                      <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">Nama Peserta</p>
-                      <p className="text-base font-bold text-[var(--color-text-primary)]">{selectedParticipant.full_name}</p>
-                    </div>
-                    <div className="mb-3">
-                      <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">NIM</p>
-                      <p className="text-sm font-[var(--font-mono)] text-[var(--color-text-primary)]">{selectedParticipant.nim}</p>
-                    </div>
+                    {displayColumns.map((col, idx) => (
+                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-3" : "mb-3"}>
+                         <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">{col.label}</p>
+                         {idx === 2 && displayColumns.length >= 3 ? (
+                           <span 
+                             className="inline-block px-2.5 py-0.5 text-sm font-bold rounded-md max-w-full truncate"
+                             title={getColumnValue(selectedParticipant, col.key)}
+                             style={getThirdColumnStyle(getColumnValue(selectedParticipant, col.key))}
+                           >
+                             {getColumnValue(selectedParticipant, col.key)}
+                           </span>
+                         ) : (
+                           <p className={`${idx === 0 ? 'text-base font-bold' : 'text-sm font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
+                             {getColumnValue(selectedParticipant, col.key)}
+                           </p>
+                         )}
+                      </div>
+                    ))}
                     <div className="pt-3 border-t border-[var(--color-border)] flex items-center justify-between">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--color-success-soft)] text-[var(--color-success)] text-xs font-semibold rounded-full border border-[var(--color-success)]/20">
                         Hadir
@@ -303,18 +358,28 @@ export function StudentModePage() {
                 <div className="flex flex-col items-center text-center">
                   <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">Konfirmasi Presensi</h2>
                   <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                    Pastikan nama dan NIM sesuai dengan identitas Anda.
+                    {confirmDescription}
                   </p>
                   
                   <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-left mb-4">
-                    <div className="mb-3">
-                      <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">Nama Peserta</p>
-                      <p className="text-base font-bold text-[var(--color-text-primary)]">{selectedParticipant.full_name}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">NIM</p>
-                      <p className="text-sm font-[var(--font-mono)] text-[var(--color-text-primary)]">{selectedParticipant.nim}</p>
-                    </div>
+                    {displayColumns.map((col, idx) => (
+                      <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-3" : ""}>
+                         <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">{col.label}</p>
+                         {idx === 2 && displayColumns.length >= 3 ? (
+                           <span 
+                             className="inline-block px-2.5 py-0.5 text-sm font-bold rounded-md max-w-full truncate"
+                             title={getColumnValue(selectedParticipant, col.key)}
+                             style={getThirdColumnStyle(getColumnValue(selectedParticipant, col.key))}
+                           >
+                             {getColumnValue(selectedParticipant, col.key)}
+                           </span>
+                         ) : (
+                           <p className={`${idx === 0 ? 'text-base font-bold' : 'text-sm font-[var(--font-mono)]'} text-[var(--color-text-primary)]`}>
+                             {getColumnValue(selectedParticipant, col.key)}
+                           </p>
+                         )}
+                      </div>
+                    ))}
                   </div>
 
                   <div className="w-full flex flex-col gap-2">
@@ -346,9 +411,17 @@ export function StudentModePage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="w-full flex flex-col items-center justify-center py-8"
+              className="w-full flex flex-col items-center justify-center py-8 relative overflow-hidden"
             >
-              <div className="relative mb-4">
+              {displayColumns.length >= 3 && selectedParticipant && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                  <AuroraEffect color={getThirdColumnStyle(
+                    getColumnValue(selectedParticipant, displayColumns[2].key)
+                  ).text} />
+                </div>
+              )}
+
+              <div className="relative mb-4 z-10">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -367,12 +440,22 @@ export function StudentModePage() {
                   </svg>
                 </motion.div>
               </div>
-              <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-1">
+              <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-1 relative z-10">
                 Presensi Berhasil!
               </h2>
-              <p className="text-sm text-[var(--color-text-secondary)]">
+              <p className="text-sm text-[var(--color-text-secondary)] relative z-10">
                 Terima kasih, {selectedParticipant?.full_name}
               </p>
+              
+              {displayColumns.length >= 3 && selectedParticipant && (
+                <span 
+                  className="inline-block mt-3 px-3 py-1 text-sm font-bold rounded-md relative z-10 shadow-sm max-w-[200px] truncate"
+                  title={getColumnValue(selectedParticipant, displayColumns[2].key)}
+                  style={getThirdColumnStyle(getColumnValue(selectedParticipant, displayColumns[2].key))}
+                >
+                  {getColumnValue(selectedParticipant, displayColumns[2].key)}
+                </span>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
