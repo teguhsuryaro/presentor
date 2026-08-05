@@ -215,7 +215,8 @@ export function ImportParticipantModal({ isOpen, onClose, onSuccess, sessionId, 
             {requiredColumns.map(col => (
               <Select 
                 key={col.key}
-                label={`Kolom ${col.label} *`}
+                label={`Kolom ${col.label}`}
+                required={true}
                 value={mapping[col.key] || ''} 
                 onChange={val => handleMappingChange(col.key, val)} 
                 options={headerOptions} 
