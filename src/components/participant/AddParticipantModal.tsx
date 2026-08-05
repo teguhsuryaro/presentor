@@ -81,7 +81,7 @@ export function AddParticipantModal({ isOpen, onClose, onSuccess, sessionId, col
         {columns.map(col => (
           <Input
             key={col.key}
-            label={`${col.label} ${col.required ? '*' : ''}`}
+            label={col.label}
             value={formValues[col.key] || ''}
             onChange={(e) => handleChange(col.key, e.target.value)}
             required={col.required}

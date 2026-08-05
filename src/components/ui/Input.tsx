@@ -19,9 +19,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
-            {label}
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor={inputId} className="block text-sm font-semibold text-[var(--color-text-primary)]">
+              {label}
+              {props.required && <span className="text-red-500 ml-1" title="Wajib diisi">*</span>}
+            </label>
+            {!props.required && (
+              <span className="text-xs text-[var(--color-text-secondary)] italic">Opsional</span>
+            )}
+          </div>
         )}
         <div className="relative">
           {leftIcon && (

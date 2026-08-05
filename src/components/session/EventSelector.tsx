@@ -62,7 +62,8 @@ export function EventSelector({ value, onChange, disabled }: EventSelectorProps)
       <div className="space-y-3 p-3 border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-bg)]">
         <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">Buat Event Baru</h4>
         <Input 
-          label="Nama Event *"
+          label="Nama Event"
+          required
           value={newEventName}
           onChange={(e) => setNewEventName(e.target.value)}
           placeholder="Misal: OSPEK 2026"

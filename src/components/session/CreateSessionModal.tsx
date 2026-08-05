@@ -163,10 +163,12 @@ export function CreateSessionModal({ isOpen, onClose, onSuccess }: CreateSession
         />
         
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-[var(--color-text-primary)]">
-            Deskripsi
-            <span className="ml-1 text-xs text-[var(--color-text-secondary)] font-normal">(opsional)</span>
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-semibold text-[var(--color-text-primary)]">
+              Deskripsi
+            </label>
+            <span className="text-xs text-[var(--color-text-secondary)] italic">Opsional</span>
+          </div>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -179,30 +181,36 @@ export function CreateSessionModal({ isOpen, onClose, onSuccess }: CreateSession
         <div className="pt-4 border-t border-[var(--color-border)]">
           <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-3">Pengaturan Kolom Data Peserta</h3>
           
-          <div className="flex gap-4 mb-4">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input 
-                type="radio" 
-                name="columnMode" 
-                value="custom"
-                checked={columnMode === 'custom'}
-                onChange={() => setColumnMode('custom')}
-                disabled={isSubmitting}
-                className="accent-[var(--color-accent)]"
-              />
-              Atur kolom sendiri
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            <label className={`flex flex-col gap-1 p-3 rounded-xl border-2 cursor-pointer transition-all ${columnMode === 'custom' ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5' : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)]/50'}`}>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="radio" 
+                  name="columnMode" 
+                  value="custom"
+                  checked={columnMode === 'custom'}
+                  onChange={() => setColumnMode('custom')}
+                  disabled={isSubmitting}
+                  className="accent-[var(--color-accent)] w-4 h-4"
+                />
+                <span className="text-sm font-bold text-[var(--color-text-primary)]">Atur Kolom Sendiri</span>
+              </div>
+              <p className="text-xs text-[var(--color-text-secondary)] pl-6">Buat struktur data baru dari awal.</p>
             </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input 
-                type="radio" 
-                name="columnMode" 
-                value="copy"
-                checked={columnMode === 'copy'}
-                onChange={() => setColumnMode('copy')}
-                disabled={isSubmitting}
-                className="accent-[var(--color-accent)]"
-              />
-              Salin dari sesi yang sudah ada
+            <label className={`flex flex-col gap-1 p-3 rounded-xl border-2 cursor-pointer transition-all ${columnMode === 'copy' ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5' : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)]/50'}`}>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="radio" 
+                  name="columnMode" 
+                  value="copy"
+                  checked={columnMode === 'copy'}
+                  onChange={() => setColumnMode('copy')}
+                  disabled={isSubmitting}
+                  className="accent-[var(--color-accent)] w-4 h-4"
+                />
+                <span className="text-sm font-bold text-[var(--color-text-primary)]">Salin dari Sesi Lain</span>
+              </div>
+              <p className="text-xs text-[var(--color-text-secondary)] pl-6">Gunakan format dari sesi sebelumnya.</p>
             </label>
           </div>
 

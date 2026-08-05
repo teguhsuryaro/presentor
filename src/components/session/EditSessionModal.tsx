@@ -137,7 +137,7 @@ export function EditSessionModal({ isOpen, onClose, onSuccess, session }: EditSe
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Sesi">
       <form onSubmit={handleSubmit} className="space-y-4 pt-2">
         <Input
-          label="Nama Sesi *"
+          label="Nama Sesi"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -145,7 +145,12 @@ export function EditSessionModal({ isOpen, onClose, onSuccess, session }: EditSe
         />
         
         <div className="space-y-1">
-          <label className="text-sm font-medium text-[var(--color-text-primary)]">Deskripsi</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-semibold text-[var(--color-text-primary)]">
+              Deskripsi
+            </label>
+            <span className="text-xs text-[var(--color-text-secondary)] italic">Opsional</span>
+          </div>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
