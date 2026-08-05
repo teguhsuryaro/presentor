@@ -4,9 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, ArrowLeft, CheckCircle2, Clock, Lock, Eye, EyeOff } from 'lucide-react'
 
 import { getSessionById } from '../services/session.service'
-import { searchParticipants } from '../services/participant.service'
 import { markAttendance, getParticipantsWithAttendance } from '../services/attendance.service'
-import type { SessionWithStats, ParticipantWithAttendance, SessionColumn } from '../types'
+import type { SessionWithStats, ParticipantWithAttendance } from '../types'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import { useRealtimeAttendance } from '../hooks/useRealtimeAttendance'
@@ -25,7 +24,6 @@ export function StudentModePage() {
   const [session, setSession] = useState<SessionWithStats | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<ParticipantWithAttendance[]>([])
-  const [isSearching, setIsSearching] = useState(false)
   
   const [selectedParticipant, setSelectedParticipant] = useState<ParticipantWithAttendance | null>(null)
   const [isSuccessMode, setIsSuccessMode] = useState(false)
@@ -124,11 +122,9 @@ export function StudentModePage() {
     const delayDebounceFn = setTimeout(() => {
       if (!searchQuery.trim()) {
         setSearchResults([])
-        setIsSearching(false)
         return
       }
 
-      setIsSearching(true)
       const query = searchQuery.toLowerCase().trim()
       
       const results = allParticipants.filter(p => 
@@ -138,7 +134,6 @@ export function StudentModePage() {
       ).slice(0, 5)
       
       setSearchResults(results)
-      setIsSearching(false)
     }, 200)
 
     return () => clearTimeout(delayDebounceFn)
@@ -428,7 +423,7 @@ export function StudentModePage() {
                 <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                   <AuroraEffect color={getThirdColumnStyle(
                     getColumnValue(selectedParticipant, displayColumns[2].key)
-                  ).text} />
+                  ).color} />
                 </div>
               )}
 
