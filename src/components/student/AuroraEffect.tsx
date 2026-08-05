@@ -1,60 +1,125 @@
-import { motion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 
 interface AuroraEffectProps {
-  color: string  // Warna dasar aurora (hex, misal '#6D28D9')
+  color: string
 }
 
 export function AuroraEffect({ color }: AuroraEffectProps) {
-  // Konversi hex ke rgba dengan opacity rendah
-  const hexToRgba = (hex: string, alpha: number) => {
-    // Basic hex parsing, assumes 7 chars e.g. #6D28D9
-    if (hex.startsWith('#') && hex.length === 7) {
-      const r = parseInt(hex.slice(1, 3), 16)
-      const g = parseInt(hex.slice(3, 5), 16)
-      const b = parseInt(hex.slice(5, 7), 16)
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let animationFrameId: number
+    let time = 0
+
+    const resize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
     }
-    // Fallback if not standard hex
-    return color
-  }
-  
+    window.addEventListener('resize', resize)
+    resize()
+
+    // Default color if parsing fails
+    let r = 109, g = 40, b = 217 
+    if (color.startsWith('#') && color.length === 7) {
+      r = parseInt(color.slice(1, 3), 16)
+      g = parseInt(color.slice(3, 5), 16)
+      b = parseInt(color.slice(5, 7), 16)
+    }
+
+    const particlesX = 60
+    const particlesZ = 40
+    const spacing = 45
+    const fov = 700
+
+    const render = () => {
+      time += 0.015
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      
+      const cx = canvas.width / 2
+      const cy = canvas.height / 2 + 100 // offset camera height
+
+      // Draw large radial glow in background
+      const gradient = ctx.createRadialGradient(cx, cy - 100, 0, cx, cy - 100, canvas.width * 0.8)
+      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.15)`)
+      gradient.addColorStop(1, 'transparent')
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      for (let z = 0; z < particlesZ; z++) {
+        for (let x = 0; x < particlesX; x++) {
+          const px = (x - particlesX / 2) * spacing
+          const pz = z * spacing + 150
+
+          // Calculate multi-wave interference
+          const py1 = Math.sin(x * 0.15 + time) * 60 + Math.cos(z * 0.15 + time * 0.8) * 60 + Math.sin(x * 0.05 + z * 0.05 - time) * 40
+          
+          const scale1 = fov / pz
+          const sx1 = cx + px * scale1
+          const sy1 = cy + py1 * scale1
+
+          const alpha = Math.max(0, 1 - (z / particlesZ)) * 0.9
+
+          // Draw particle
+          ctx.beginPath()
+          ctx.arc(sx1, sy1, 1.5 * scale1, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
+          ctx.fill()
+
+          // Connect to next X
+          if (x < particlesX - 1) {
+            const px2 = (x + 1 - particlesX / 2) * spacing
+            const py2 = Math.sin((x + 1) * 0.15 + time) * 60 + Math.cos(z * 0.15 + time * 0.8) * 60 + Math.sin((x + 1) * 0.05 + z * 0.05 - time) * 40
+            const scale2 = fov / pz
+            const sx2 = cx + px2 * scale2
+            const sy2 = cy + py2 * scale2
+
+            ctx.beginPath()
+            ctx.moveTo(sx1, sy1)
+            ctx.lineTo(sx2, sy2)
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha * 0.25})`
+            ctx.lineWidth = 1 * scale1
+            ctx.stroke()
+          }
+
+          // Connect to next Z
+          if (z < particlesZ - 1) {
+            const pz3 = (z + 1) * spacing + 150
+            const py3 = Math.sin(x * 0.15 + time) * 60 + Math.cos((z + 1) * 0.15 + time * 0.8) * 60 + Math.sin(x * 0.05 + (z + 1) * 0.05 - time) * 40
+            const scale3 = fov / pz3
+            const sx3 = cx + px * scale3
+            const sy3 = cy + py3 * scale3
+
+            ctx.beginPath()
+            ctx.moveTo(sx1, sy1)
+            ctx.lineTo(sx3, sy3)
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha * 0.25})`
+            ctx.lineWidth = 1 * scale1
+            ctx.stroke()
+          }
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(render)
+    }
+
+    render()
+
+    return () => {
+      window.removeEventListener('resize', resize)
+      cancelAnimationFrame(animationFrameId)
+    }
+  }, [color])
+
   return (
-    <div className="absolute inset-0 overflow-hidden w-full h-full pointer-events-none">
-      {/* Top Left Blob */}
-      <motion.div
-        className="absolute w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full blur-[100px]"
-        style={{ background: hexToRgba(color, 0.25), top: '-10%', left: '-10%', willChange: 'transform' }}
-        animate={{
-          x: ['0%', '15%', '-5%', '0%'],
-          y: ['0%', '10%', '-10%', '0%'],
-          scale: [1, 1.1, 0.95, 1],
-        }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      
-      {/* Bottom Right Blob */}
-      <motion.div
-        className="absolute w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full blur-[90px]"
-        style={{ background: hexToRgba(color, 0.2), bottom: '-15%', right: '-5%', willChange: 'transform' }}
-        animate={{
-          x: ['0%', '-15%', '10%', '0%'],
-          y: ['0%', '-20%', '5%', '0%'],
-          scale: [1, 1.15, 0.9, 1],
-        }}
-        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      
-      {/* Center Blob */}
-      <motion.div
-        className="absolute w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full blur-[120px]"
-        style={{ background: hexToRgba(color, 0.15), top: '20%', left: '30%', willChange: 'transform' }}
-        animate={{
-          x: ['0%', '10%', '-15%', '0%'],
-          y: ['0%', '-10%', '15%', '0%'],
-          scale: [1, 0.9, 1.1, 1],
-        }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-      />
-    </div>
+    <canvas 
+      ref={canvasRef} 
+      className="fixed inset-0 w-full h-full pointer-events-none mix-blend-screen opacity-80"
+      style={{ zIndex: 0 }}
+    />
   )
 }

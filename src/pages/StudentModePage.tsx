@@ -237,7 +237,7 @@ export function StudentModePage() {
       <header className="relative z-10 px-6 pb-6 flex flex-col items-center justify-center text-center">
         <div className="bg-[var(--color-accent)] px-4 py-2 rounded-lg shadow-sm mb-2">
           <h1 className="text-xl md:text-2xl font-bold font-[var(--font-display)] text-white">
-            {session.name}
+            {session.name.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())}
           </h1>
         </div>
         <p className="text-sm text-[var(--color-text-secondary)]">Presensi Peserta</p>
@@ -353,7 +353,7 @@ export function StudentModePage() {
                     Anda sudah melakukan presensi sebelumnya.
                   </p>
                   
-                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-left mb-4">
+                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-center mb-4">
                     {displayColumns.map((col, idx) => (
                       <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-3" : "mb-3"}>
                          <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">{col.label}</p>
@@ -397,7 +397,7 @@ export function StudentModePage() {
                     {confirmDescription}
                   </p>
                   
-                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-left mb-4">
+                  <div className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-lg p-4 text-center mb-4">
                     {displayColumns.map((col, idx) => (
                       <div key={col.key} className={idx < displayColumns.length - 1 ? "mb-3" : ""}>
                          <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-0.5">{col.label}</p>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Users, UserCheck, UserMinus, TrendingUp, Search, Download, Plus, Play, MoreVertical, Check, Pencil, ArrowUpDown } from 'lucide-react'
+import { ArrowLeft, Users, UserCheck, UserMinus, TrendingUp, Search, Download, Plus, Play, MoreVertical, Check, Pencil, ArrowUpDown, ChevronDown } from 'lucide-react'
 
 import { getSessionById, openSession, closeSession } from '../services/session.service'
 import { getParticipantsWithAttendance, markAttendance, unmarkAttendance, batchMarkAttendance } from '../services/attendance.service'
@@ -495,7 +495,7 @@ export function SessionDetailPage() {
               </button>
             ))}
           </div>
-          <div className="w-full sm:w-64">
+          <div className="w-full sm:w-80 md:w-96">
             <Input
               placeholder={searchPlaceholder}
               value={searchQuery}
@@ -517,7 +517,7 @@ export function SessionDetailPage() {
                       {col.label}
                       {idx === 1 && effectiveColumns.length > 2 && (
                         <DropdownMenu
-                          trigger={<button className="p-1 -m-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><ArrowUpDown size={14} /></button>}
+                          trigger={<button className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-accent)] hover:shadow-sm transition-all text-xs shadow-[0_1px_2px_rgba(0,0,0,0.05)]"><ChevronDown size={14} /></button>}
                           items={effectiveColumns.slice(1).map((c, i) => ({
                             label: c.label,
                             onClick: () => setVisibleSecondColumnIndex(i + 1),

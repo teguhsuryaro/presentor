@@ -9,14 +9,14 @@ import { useAuth } from '../context/AuthContext'
 import { ConfirmDialog } from '../components/ui'
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: Home },
+  { path: '/dashboard', label: 'Dashboard', icon: Home },
   { path: '/stats', label: 'Statistik', icon: BarChart3 },
   { path: '/history', label: 'Riwayat Aktivitas', icon: History },
   { path: '/trash', label: 'Sampah', icon: Trash2 },
 ]
 
 const bottomNavItems = [
-  { path: '/', label: 'Home', icon: Home },
+  { path: '/dashboard', label: 'Home', icon: Home },
   { path: '/stats', label: 'Statistik', icon: BarChart3 },
   { path: '/profile', label: 'Profil', icon: Settings },
 ]
@@ -138,7 +138,6 @@ export function MainLayout() {
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.path === '/'}
               className={({ isActive }) => cn(
                 "flex items-center gap-3 px-4 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-all duration-200",
                 isActive 
@@ -257,7 +256,6 @@ export function MainLayout() {
           <NavLink
             key={item.path}
             to={item.path}
-            end={item.path === '/'}
             className={({ isActive }) => cn(
               "flex flex-col items-center justify-center w-full py-2.5 gap-1 transition-colors",
               isActive ? "text-[var(--color-accent)]" : "text-[var(--color-text-secondary)]"
