@@ -439,52 +439,68 @@ export function StudentModePage() {
             </motion.div>
           )}
 
-          {/* Success Animation View — compact */}
-          {isSuccessMode && (
+          {/* Success Animation View */}
+          {isSuccessMode && selectedParticipant && (
             <motion.div
               key="success"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="w-full flex flex-col items-center justify-center py-8 relative overflow-hidden"
+              className="w-full flex flex-col items-center justify-center py-8 relative overflow-hidden z-10"
             >
-              {/* (Aurora moved to background) */}
-
-              <div className="relative mb-4 z-10">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                  className="w-24 h-24 bg-[var(--color-success)] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.3)]"
-                >
-                  <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <motion.path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 0.4, delay: 0.2 }}
-                    />
-                  </svg>
-                </motion.div>
+              <div className="relative mb-6">
+                {displayColumns.length >= 3 ? (
+                  <motion.div
+                    initial={{ scale: 0, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center p-4 border-4 shadow-2xl bg-opacity-90 backdrop-blur-sm"
+                    style={{ 
+                      backgroundColor: getThirdColumnStyle(getColumnValue(selectedParticipant, displayColumns[2].key)).backgroundColor,
+                      borderColor: getThirdColumnStyle(getColumnValue(selectedParticipant, displayColumns[2].key)).color,
+                      boxShadow: `0 0 50px ${getThirdColumnStyle(getColumnValue(selectedParticipant, displayColumns[2].key)).backgroundColor}`
+                    }}
+                  >
+                    <span 
+                      className="text-center font-bold text-lg md:text-xl leading-tight line-clamp-3 drop-shadow-sm"
+                      style={{ color: getThirdColumnStyle(getColumnValue(selectedParticipant, displayColumns[2].key)).color }}
+                    >
+                      {getColumnValue(selectedParticipant, displayColumns[2].key)}
+                    </span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    className="w-24 h-24 bg-[var(--color-success)] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.3)]"
+                  >
+                    <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <motion.path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.4, delay: 0.2 }}
+                      />
+                    </svg>
+                  </motion.div>
+                )}
               </div>
-              <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-1 relative z-10">
-                Presensi Berhasil!
-              </h2>
-              <p className="text-sm text-[var(--color-text-secondary)] relative z-10">
-                Terima kasih, {selectedParticipant?.full_name}
-              </p>
               
-              {displayColumns.length >= 3 && selectedParticipant && (
-                <span 
-                  className="inline-block mt-3 px-3 py-1 text-sm font-bold rounded-md relative z-10 shadow-sm max-w-[200px] truncate"
-                  title={getColumnValue(selectedParticipant, displayColumns[2].key)}
-                  style={getThirdColumnStyle(getColumnValue(selectedParticipant, displayColumns[2].key))}
-                >
-                  {getColumnValue(selectedParticipant, displayColumns[2].key)}
-                </span>
+              <h2 className="text-2xl md:text-4xl font-bold text-[var(--color-text-primary)] mb-3 text-center drop-shadow-md px-4 leading-tight">
+                <span className="block text-lg md:text-2xl font-semibold text-[var(--color-text-secondary)] mb-2">Selamat Datang,</span>
+                {getColumnValue(selectedParticipant, displayColumns[0].key)}
+              </h2>
+              
+              {displayColumns.length >= 2 && (
+                <div className="bg-[var(--color-surface)]/80 backdrop-blur-md px-6 py-2 rounded-full border border-[var(--color-border)] shadow-sm">
+                  <p className="text-lg md:text-xl font-[var(--font-mono)] text-[var(--color-text-primary)] font-semibold text-center tracking-wide">
+                    {getColumnValue(selectedParticipant, displayColumns[1].key)}
+                  </p>
+                </div>
               )}
             </motion.div>
           )}
